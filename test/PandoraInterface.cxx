@@ -1781,7 +1781,7 @@ bool ProcessRecoOption(const std::string &recoOption, Parameters &parameters)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ProcessFormatOption(const std::string &formatOption, const std::string &inputTreeName, const std::string &geomFileName,
-                         const std::string &geomVolName, const std::string &sensDetName, Parameters &parameters)
+    const std::string &geomVolName, const std::string &sensDetName, Parameters &parameters)
 {
     std::string chosenFormatOption(formatOption);
     std::transform(chosenFormatOption.begin(), chosenFormatOption.end(), chosenFormatOption.begin(), ::tolower);
