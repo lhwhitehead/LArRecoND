@@ -403,7 +403,8 @@ bool ProcessRecoOption(const std::string &recoOption, Parameters &parameters);
  *  @param  geomFileName the name of the file containing the TGeoManager info
  *  @param  parameters to receive the application parameters
  */
-void ProcessFormatOption(const std::string &formatOption, const std::string &inputTreeName, const std::string &geomFileName, Parameters &parameters);
+void ProcessFormatOption(const std::string &formatOption, const std::string &inputTreeName, const std::string &geomFileName,
+                         const std::string &geomVolName, const std::string &sensDetName, Parameters &parameters);
 
 /**
  *  @brief  Process list of external, commandline parameters to be passed to specific algorithms
