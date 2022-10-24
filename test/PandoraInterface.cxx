@@ -1331,8 +1331,8 @@ LArVoxelProjectionList MergeSameProjections(const LArVoxelProjectionList &hits)
             continue;
 
         LArVoxelProjection voxProj1{hits.at(vp1)};
-        std::map<int, float> trackIDToEnergy;
-        trackIDToEnergy[voxProj1.m_trackID] = voxProj1.m_energy;
+        std::map<unsigned int, float> indexToEnergy;
+        indexToEnergy[vp1] = voxProj1.m_energy;
         for (unsigned int vp2 = vp1 + 1; vp2 < hits.size(); ++vp2)
         {
             if (areUsed.at(vp2))
@@ -1344,10 +1344,10 @@ LArVoxelProjectionList MergeSameProjections(const LArVoxelProjectionList &hits)
 
             // Add the energy, but keep track of the highest energy contributor
             voxProj1.m_energy += voxProj2.m_energy;
-            if (trackIDToEnergy.count(voxProj2.m_trackID) != 0)
-                trackIDToEnergy[voxProj2.m_trackID] += voxProj2.m_energy;
+            if (indexToEnergy.count(vp2) != 0)
+                indexToEnergy[vp2] += voxProj2.m_energy;
             else
-                trackIDToEnergy[voxProj2.m_trackID] = voxProj2.m_energy;
+                indexToEnergy[vp2] = voxProj2.m_energy;
 
             areUsed.at(vp2) = true;
         }
@@ -1355,19 +1355,20 @@ LArVoxelProjectionList MergeSameProjections(const LArVoxelProjectionList &hits)
         areUsed.at(vp1) = true;
 
         // Update the track ID if necessary
-        if (trackIDToEnergy.size() > 1)
+        if (indexToEnergy.size() > 1)
         {
             float highestEnergy{0.f};
-            int bestTrackID{-1};
-            for (auto const &pair : trackIDToEnergy)
+            int bestIndex{-1};
+            for (auto const &pair : indexToEnergy)
             {
                 if (pair.second > highestEnergy)
                 {
                     highestEnergy = pair.second;
-                    bestTrackID = pair.first;
+                    bestIndex = pair.first;
                 }
             }
-            voxProj1.m_trackID = bestTrackID;
+            voxProj1.m_trackID = hits.at(bestIndex).m_trackID;
+            voxProj1.m_parentVoxelID = hits.at(bestIndex).m_parentVoxelID;
         }
         outputHits.emplace_back(voxProj1);
     }
@@ -1400,13 +1401,14 @@ void MakeCaloHitsFromVoxels(const LArVoxelList &voxels, const MCParticleEnergyMa
             if (voxelMipEquivalentE < parameters.m_minVoxelMipEquivE)
                 continue;
 
+            ++hitCounter;
             // Modify the important fields
             caloHitParameters.m_positionVector = voxelPos;
             caloHitParameters.m_inputEnergy = voxelE;
             caloHitParameters.m_mipEquivalentEnergy = voxelMipEquivalentE;
             caloHitParameters.m_electromagneticEnergy = voxelE;
             caloHitParameters.m_hadronicEnergy = voxelE;
-            caloHitParameters.m_pParentAddress = (void *)(static_cast<uintptr_t>(++hitCounter));
+            caloHitParameters.m_pParentAddress = (void *)(static_cast<intptr_t>(voxel.m_voxelID));
             caloHitParameters.m_larTPCVolumeId = voxel.m_tpcID;
 
             PANDORA_THROW_RESULT_IF(
@@ -1463,13 +1465,14 @@ void MakeCaloHitsFromVoxels(const LArVoxelList &voxels, const MCParticleEnergyMa
                 if (voxelMipEquivalentE < parameters.m_minVoxelMipEquivE)
                     continue;
 
+                ++hitCounter;
                 // Modify the important fields
                 caloHitParameters.m_positionVector = pandora::CartesianVector(hit.m_drift, 0.f, hit.m_wire);
                 caloHitParameters.m_inputEnergy = voxelE;
                 caloHitParameters.m_mipEquivalentEnergy = voxelMipEquivalentE;
                 caloHitParameters.m_electromagneticEnergy = voxelE;
                 caloHitParameters.m_hadronicEnergy = voxelE;
-                caloHitParameters.m_pParentAddress = (void *)(static_cast<uintptr_t>(++hitCounter));
+                caloHitParameters.m_pParentAddress = (void *)(static_cast<intptr_t>(hit.m_parentVoxelID));
                 caloHitParameters.m_hitType = hit.m_view;
                 caloHitParameters.m_larTPCVolumeId = hit.m_tpcID;
 
