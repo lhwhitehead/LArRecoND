@@ -70,11 +70,11 @@ endif()
 # Build products
 
 # - Collect sources - not ideal because you have to keep running CMake to pick up changes
-#file(GLOB_RECURSE LAR_RECO_ND_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cxx")
+file(GLOB_RECURSE LAR_RECO_ND_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "src/*.cc")
 
 # - Add library and properties
-#add_library(${PROJECT_NAME} SHARED ${LAR_RECO_ND_SRCS})
-#set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION} SOVERSION ${${PROJECT_NAME}_SOVERSION})
+add_library(${PROJECT_NAME} SHARED ${LAR_RECO_ND_SRCS})
+set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION} SOVERSION ${${PROJECT_NAME}_SOVERSION})
 
 # - Executable
 add_executable(PandoraInterface ${PROJECT_SOURCE_DIR}/test/PandoraInterface.cxx)
@@ -82,7 +82,7 @@ if(PANDORA_MONITORING)
     include_directories(${ROOT_INCLUDE_DIRS})
     target_link_libraries(PandoraInterface ${ROOT_LIBRARIES} EDepSim::edepsim_io)
 endif()
-#target_link_libraries(PandoraInterface ${PROJECT_NAME})
+target_link_libraries(PandoraInterface ${PROJECT_NAME})
 
 # - Optional documents
 option(LArRecoND_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
@@ -94,7 +94,7 @@ endif()
 # Install products
 
 # - library
-#install(TARGETS ${PROJECT_NAME} DESTINATION lib COMPONENT Runtime)
+install(TARGETS ${PROJECT_NAME} DESTINATION lib COMPONENT Runtime)
 
 # - headers
 install(DIRECTORY include/ DESTINATION include COMPONENT Development FILES_MATCHING PATTERN "*.h")

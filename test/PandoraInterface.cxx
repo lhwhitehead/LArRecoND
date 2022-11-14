@@ -35,6 +35,7 @@
 #include "LArNDGeomSimple.h"
 #include "LArRay.h"
 #include "PandoraInterface.h"
+#include "LArNDContent.h"
 
 #ifdef MONITORING
 #include "TApplication.h"
@@ -74,6 +75,8 @@ int main(int argc, char *argv[])
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterAlgorithms(*pPrimaryPandora));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterBasicPlugins(*pPrimaryPandora));
+        if (parameters.m_use3D)
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArNDContent::RegisterAlgorithms(*pPrimaryPandora));
 
         MultiPandoraApi::AddPrimaryPandoraInstance(pPrimaryPandora);
 
@@ -336,8 +339,8 @@ void ProcessEDepSimEvents(const Parameters &parameters, const Pandora *const pPr
         for (TG4HitSegmentDetectors::iterator detector = pEDepSimEvent->SegmentDetectors.begin();
              detector != pEDepSimEvent->SegmentDetectors.end(); ++detector)
         {
-            //            if (detector->first != parameters.m_sensitiveDetName)
-            if (detector->first.find(parameters.m_sensitiveDetName) == std::string::npos)
+                        if (detector->first != parameters.m_sensitiveDetName)
+            //if (detector->first.find(parameters.m_sensitiveDetName) == std::string::npos)
             {
                 std::cout << "Skipping sensitive detector " << detector->first << "; expecting " << parameters.m_sensitiveDetName << std::endl;
                 continue;
@@ -1330,14 +1333,14 @@ LArVoxelProjectionList MergeSameProjections(const LArVoxelProjectionList &hits)
         if (areUsed.at(vp1))
             continue;
 
-        LArVoxelProjection voxProj1{hits.at(vp1)};
+        LArVoxelProjection voxProj1(hits.at(vp1));
         std::map<unsigned int, float> indexToEnergy;
         indexToEnergy[vp1] = voxProj1.m_energy;
         for (unsigned int vp2 = vp1 + 1; vp2 < hits.size(); ++vp2)
         {
             if (areUsed.at(vp2))
                 continue;
-
+ 
             const LArVoxelProjection &voxProj2 = hits.at(vp2);
             if ((voxProj1.m_wire != voxProj2.m_wire) || (voxProj1.m_drift != voxProj2.m_drift))
                 continue;
@@ -1432,18 +1435,19 @@ void MakeCaloHitsFromVoxels(const LArVoxelList &voxels, const MCParticleEnergyMa
         for (unsigned int v = 0; v < voxels.size(); ++v)
         {
             const LArVoxel &voxel = voxels.at(v);
+            
             const pandora::CartesianVector voxelPos = voxel.m_voxelPosVect;
             const float uPos(pPrimaryPandora->GetPlugins()->GetLArTransformationPlugin()->YZtoU(voxelPos.GetY(), voxelPos.GetZ()));
             voxelProjectionsU.emplace_back(
-                LArVoxelProjection(voxel.m_energyInVoxel, uPos, voxelPos.GetX(), pandora::TPC_VIEW_U, voxel.m_trackID, voxel.m_tpcID));
+                LArVoxelProjection(voxel.m_energyInVoxel, uPos, voxelPos.GetX(), pandora::TPC_VIEW_U, voxel.m_voxelID, voxel.m_trackID, voxel.m_tpcID));
 
             const float vPos(pPrimaryPandora->GetPlugins()->GetLArTransformationPlugin()->YZtoV(voxelPos.GetY(), voxelPos.GetZ()));
             voxelProjectionsV.emplace_back(
-                LArVoxelProjection(voxel.m_energyInVoxel, vPos, voxelPos.GetX(), pandora::TPC_VIEW_V, voxel.m_trackID, voxel.m_tpcID));
+                LArVoxelProjection(voxel.m_energyInVoxel, vPos, voxelPos.GetX(), pandora::TPC_VIEW_V, voxel.m_voxelID, voxel.m_trackID, voxel.m_tpcID));
 
             const float wPos(pPrimaryPandora->GetPlugins()->GetLArTransformationPlugin()->YZtoW(voxelPos.GetY(), voxelPos.GetZ()));
             voxelProjectionsW.emplace_back(
-                LArVoxelProjection(voxel.m_energyInVoxel, wPos, voxelPos.GetX(), pandora::TPC_VIEW_W, voxel.m_trackID, voxel.m_tpcID));
+                LArVoxelProjection(voxel.m_energyInVoxel, wPos, voxelPos.GetX(), pandora::TPC_VIEW_W, voxel.m_voxelID, voxel.m_trackID, voxel.m_tpcID));
         }
 
         std::vector<LArVoxelProjectionList> viewProjections;
@@ -1814,6 +1818,7 @@ void ProcessFormatOption(const std::string &formatOption, const std::string &inp
         parameters.m_geomFileName = geomFileName;
         // All lengths are already in cm, so don't rescale
         parameters.m_lengthScale = 1.0f;
+//        parameters.m_lengthScale = parameters.m_mm2cm;
         // All energies are already in GeV, so don't rescale
         parameters.m_energyScale = 1.0f;
         // Set expected input TTree name for space point data
@@ -1830,7 +1835,7 @@ void ProcessFormatOption(const std::string &formatOption, const std::string &inp
         // TGeoManager is stored in the input rooTracker file containing the hits
         parameters.m_geomFileName = parameters.m_inputFileName;
         // All lengths are in mm, so we need to convert them to cm
-        parameters.m_lengthScale = parameters.m_mm2cm;
+        parameters.m_lengthScale = parameters.m_mm2cm;;
         // All energies are in MeV, so we need to convert them to GeV
         parameters.m_energyScale = parameters.m_MeV2GeV;
         // Set expected input TTree name for space point data
@@ -1855,7 +1860,14 @@ void ProcessExternalParameters(const Parameters &parameters, const Pandora *cons
     pEventSteeringParameters->m_shouldRunCosmicRecoOption = parameters.m_shouldRunCosmicRecoOption;
     pEventSteeringParameters->m_shouldPerformSliceId = parameters.m_shouldPerformSliceId;
     pEventSteeringParameters->m_printOverallRecoStatus = parameters.m_printOverallRecoStatus;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetExternalParameters(*pPandora, "LArMaster", pEventSteeringParameters));
+    if (!parameters.m_use3D)
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetExternalParameters(*pPandora, "LArMaster", pEventSteeringParameters));
+    }
+    else
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetExternalParameters(*pPandora, "LArMasterThreeD", pEventSteeringParameters));
+    }
 }
 
 } // namespace lar_nd_reco
