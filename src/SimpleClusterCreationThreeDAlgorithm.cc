@@ -120,8 +120,8 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
             clustersW.emplace_back(parametersW);
         }
 
-        std::cout << "Building 3D cluster with " << mergeList.size() << std::endl;
-        std::cout << "Building 2D clusters: " << associatedHitsU.size() << ", " << associatedHitsV.size() << ", " << associatedHitsW.size() << std::endl;
+//        std::cout << "Building 3D cluster with " << mergeList.size() << std::endl;
+//        std::cout << "Building 2D clusters: " << associatedHitsU.size() << ", " << associatedHitsV.size() << ", " << associatedHitsW.size() << std::endl;
 
         vetoList.insert(pSeedCaloHit);
         for (const CaloHit *const pAssociatedCaloHit : mergeList)

@@ -14,6 +14,7 @@
 
 #include "MasterThreeDAlgorithm.h"
 #include "SlicingThreeDAlgorithm.h"
+#include "PfoThreeDHitAssignmentAlgorithm.h" 
 #include "PrepareClusteringTwoDAlgorithm.h" 
 #include "PreProcessingThreeDAlgorithm.h"
 #include "SimpleClusterCreationThreeDAlgorithm.h"
@@ -27,6 +28,7 @@
     d("LArMasterThreeD",                        MasterThreeDAlgorithm)                                                             \
     d("LArSimpleClusterCreationThreeD",         SimpleClusterCreationThreeDAlgorithm)                                              \
     d("LArSlicingThreeD",                       SlicingThreeDAlgorithm)                                                            \
+    d("LArPfoThreeDHitAssignment",              PfoThreeDHitAssignmentAlgorithm)                                                   \
     d("LArPrepareClusteringTwoD",               PrepareClusteringTwoDAlgorithm)                                                    \
     d("LArPreProcessingThreeD",                 PreProcessingThreeDAlgorithm)                                                      \
 
