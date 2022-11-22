@@ -64,14 +64,14 @@ private:
     /**
      *  @brief Get the hits in each view matching to the clustered 3D hits
      *
-     *  @param cluster3DHits a reference to the cluster hit list
+     *  @param pCaloHit3D a pointer to the 3D hit
+     *  @param pCaloHitList2D a pointer to the 2D hit list
      *  @param associatedHits reference to empty hit list filled with 2D hits
      *  @param usedHits2D list of already used 2D hits
-     *  @param caloHitListName2D name of the input 2D hit list
      *  @param hitType the type of hits in the hit list
      */  
-    pandora::StatusCode GetAssociatedTwoDHits(const pandora::CaloHitList &cluster3DHits, pandora::CaloHitList &associatedHits,
-        pandora::CaloHitList &usedHits2D, const std::string &caloHitListName2D, const pandora::HitType &hitType) const;
+    void GetAssociatedTwoDHit(const pandora::CaloHit *const pCaloHit3D, const pandora::CaloHitList *const pCaloHitList2D,
+        pandora::CaloHitList &associatedHits, std::map<const pandora::CaloHit*, bool> &usedHits2D, const pandora::HitType &hitType) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

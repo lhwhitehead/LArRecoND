@@ -46,12 +46,13 @@ void SimpleClusterCreationThreeDAlgorithm::BuildAssociationMap(const CaloHitList
 {
     for (const CaloHit *const pCaloHitI : *pCaloHitList)
     {
+        const CartesianVector positionI = pCaloHitI->GetPositionVector();
         for (const CaloHit *const pCaloHitJ : *pCaloHitList)
         {
             if (pCaloHitI == pCaloHitJ)
                 continue;
 
-            const float distSquared((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
+            const float distSquared((positionI - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared());
             if (distSquared < m_clusteringWindowSquared)
             {
                 CaloHitList &caloHitListI(hitAssociationMap[pCaloHitI]);
@@ -72,6 +73,13 @@ void SimpleClusterCreationThreeDAlgorithm::BuildAssociationMap(const CaloHitList
 
 StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitList *const pCaloHitList, const HitAssociationMap &hitAssociationMap) const
 {
+    const CaloHitList *pCaloHitListU{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCaloHitListNames2D.at(0), pCaloHitListU));
+    const CaloHitList *pCaloHitListV{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCaloHitListNames2D.at(1), pCaloHitListV));
+    const CaloHitList *pCaloHitListW{nullptr};
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCaloHitListNames2D.at(2), pCaloHitListW));
+
     CaloHitSet vetoList;
     CaloHitVector caloHitVector(pCaloHitList->begin(), pCaloHitList->end());
     std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
@@ -80,7 +88,15 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
     std::vector<PandoraContentApi::Cluster::Parameters> clustersV;
     std::vector<PandoraContentApi::Cluster::Parameters> clustersW;
 
-    CaloHitList usedHitsU, usedHitsV, usedHitsW;
+//    CaloHitList usedHitsU, usedHitsV, usedHitsW;
+    std::map<const CaloHit*, bool> usedHitsU, usedHitsV, usedHitsW;
+
+    for (const CaloHit *const pCaloHit : *pCaloHitListU)
+        usedHitsU[pCaloHit] = false;
+    for (const CaloHit *const pCaloHit : *pCaloHitListV)
+        usedHitsV[pCaloHit] = false;
+    for (const CaloHit *const pCaloHit : *pCaloHitListW)
+        usedHitsW[pCaloHit] = false;
 
     std::cout << "Making clusters from " << caloHitVector.size() << " 3D hits" << std::endl;
     for (const CaloHit *const pSeedCaloHit : caloHitVector)
@@ -93,8 +109,15 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
         this->CollectAssociatedHits(pSeedCaloHit, pSeedCaloHit, hitAssociationMap, vetoList, mergeList);
 
         // Now we need to find the matching 2D hits and build the 2D clusters
-        CaloHitList associatedHitsU;
-        this->GetAssociatedTwoDHits(mergeList, associatedHitsU, usedHitsU, m_inputCaloHitListNames2D.at(0), TPC_VIEW_U);
+        CaloHitList associatedHitsU, associatedHitsV, associatedHitsW;
+
+        for (const CaloHit *const pCaloHit3D : mergeList)
+        {
+            this->GetAssociatedTwoDHit(pCaloHit3D, pCaloHitListU, associatedHitsU, usedHitsU, TPC_VIEW_U);
+            this->GetAssociatedTwoDHit(pCaloHit3D, pCaloHitListV, associatedHitsV, usedHitsV, TPC_VIEW_V);
+            this->GetAssociatedTwoDHit(pCaloHit3D, pCaloHitListW, associatedHitsW, usedHitsW, TPC_VIEW_W);
+        }
+
         if (!associatedHitsU.empty())
         {
             PandoraContentApi::Cluster::Parameters parametersU;
@@ -102,8 +125,6 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
             clustersU.emplace_back(parametersU);
         }
 
-        CaloHitList associatedHitsV;
-        this->GetAssociatedTwoDHits(mergeList, associatedHitsV, usedHitsV, m_inputCaloHitListNames2D.at(1), TPC_VIEW_V);
         if (!associatedHitsV.empty())
         {
             PandoraContentApi::Cluster::Parameters parametersV;
@@ -111,8 +132,6 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
             clustersV.emplace_back(parametersV);
         }
 
-        CaloHitList associatedHitsW;
-        this->GetAssociatedTwoDHits(mergeList, associatedHitsW, usedHitsW, m_inputCaloHitListNames2D.at(2), TPC_VIEW_W); 
         if (!associatedHitsW.empty())
         {
             PandoraContentApi::Cluster::Parameters parametersW;
@@ -195,46 +214,38 @@ void SimpleClusterCreationThreeDAlgorithm::CollectAssociatedHits(const CaloHit *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode SimpleClusterCreationThreeDAlgorithm::GetAssociatedTwoDHits(const CaloHitList &cluster3DHits, CaloHitList &associatedHits,
-    CaloHitList &usedHits2D, const std::string &caloHitListName2D, const HitType &hitType) const
+void SimpleClusterCreationThreeDAlgorithm::GetAssociatedTwoDHit(const CaloHit *const pCaloHit3D, const CaloHitList *const pCaloHitList2D, 
+    CaloHitList &associatedHits, std::map<const CaloHit*, bool> &usedHits2D, const HitType &hitType) const
 {
-    const CaloHitList *pCaloHitList2D{nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, caloHitListName2D, pCaloHitList2D));
+    const CartesianVector posThreeD = pCaloHit3D->GetPositionVector();
+    float wirePos{0.f};
 
-    for (const CaloHit *const pCaloHit3D : cluster3DHits)
+    if (hitType == TPC_VIEW_U)
+        wirePos = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(posThreeD.GetY(), posThreeD.GetZ());
+    if (hitType == TPC_VIEW_V)
+        wirePos = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(posThreeD.GetY(), posThreeD.GetZ());
+    if (hitType == TPC_VIEW_W)
+        wirePos = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoW(posThreeD.GetY(), posThreeD.GetZ()); 
+
+    for (const CaloHit *const pCaloHit2D : *pCaloHitList2D)
     {
-        const CartesianVector posThreeD = pCaloHit3D->GetPositionVector();
-        float wirePos{0.f};
+//        if (std::find(usedHits2D.begin(),usedHits2D.end(),pCaloHit2D) != usedHits2D.end())
+        if (usedHits2D.at(pCaloHit2D) == true)
+            continue;
 
-        if (hitType == TPC_VIEW_U)
-            wirePos = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(posThreeD.GetY(), posThreeD.GetZ());
-        if (hitType == TPC_VIEW_V)
-            wirePos = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(posThreeD.GetY(), posThreeD.GetZ());
-        if (hitType == TPC_VIEW_W)
-            wirePos = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoW(posThreeD.GetY(), posThreeD.GetZ());
-        
-        for (const CaloHit *const pCaloHit2D : *pCaloHitList2D)
+        if (!PandoraContentApi::IsAvailable(*this,pCaloHit2D))
+            continue;
+
+        const CartesianVector posTwoD = pCaloHit2D->GetPositionVector();
+
+        if (std::fabs(wirePos - posTwoD.GetZ()) < std::numeric_limits<float>::epsilon() &&
+            std::fabs(posThreeD.GetX() - posTwoD.GetX()) < std::numeric_limits<float>::epsilon())
         {
-            if (!PandoraContentApi::IsAvailable(*this,pCaloHit2D))
-                continue;
-
-            if (std::find(usedHits2D.begin(),usedHits2D.end(),pCaloHit2D) != usedHits2D.end())
-                continue;
-
-            const CartesianVector posTwoD = pCaloHit2D->GetPositionVector();
-
-            if (std::fabs(wirePos - posTwoD.GetZ()) < std::numeric_limits<float>::epsilon() &&
-                std::fabs(posThreeD.GetX() - posTwoD.GetX()) < std::numeric_limits<float>::epsilon())// &&
-//                std::fabs(pCaloHit3D->GetInputEnergy() - pCaloHit2D->GetInputEnergy()) < std::numeric_limits<float>::epsilon())
-            {
-                associatedHits.emplace_back(pCaloHit2D);
-                usedHits2D.emplace_back(pCaloHit2D);
-                break;
-            }
+            associatedHits.emplace_back(pCaloHit2D);
+            usedHits2D.at(pCaloHit2D) = true;
+            break;
         }
-    } 
-
-    return STATUS_CODE_SUCCESS;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
