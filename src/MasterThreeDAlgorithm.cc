@@ -84,7 +84,7 @@ StatusCode MasterThreeDAlgorithm::Run()
 
 StatusCode MasterThreeDAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHitListMap, SliceVector &sliceVector) const
 {
-    std::cout << "There are " << volumeIdToHitListMap.size() << "volumes" << std::endl;
+    std::cout << "There are " << volumeIdToHitListMap.size() << " volumes" << std::endl;
     for (const VolumeIdToHitListMap::value_type &mapEntry : volumeIdToHitListMap)
     {
         std::cout << "- Volume has " << mapEntry.second.m_allHitList.size() << " hits" << std::endl;
@@ -105,8 +105,6 @@ StatusCode MasterThreeDAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeI
             }
         }
     }
-
-    std::cout << "Passing on " << sliceVector.at(0).size() << " hits to the neutrino reconstruction" << std::endl;
 
     if (m_shouldRunSlicing)
     {
@@ -366,8 +364,6 @@ StatusCode MasterThreeDAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &
 
     return STATUS_CODE_SUCCESS;
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode MasterThreeDAlgorithm::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
