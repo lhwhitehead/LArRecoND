@@ -87,9 +87,10 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
     std::vector<PandoraContentApi::Cluster::Parameters> clustersU;
     std::vector<PandoraContentApi::Cluster::Parameters> clustersV;
     std::vector<PandoraContentApi::Cluster::Parameters> clustersW;
+    std::vector<PandoraContentApi::Cluster::Parameters> clusters3D;
 
 //    CaloHitList usedHitsU, usedHitsV, usedHitsW;
-    std::map<const CaloHit*, bool> usedHitsU, usedHitsV, usedHitsW;
+    HitUsedMap usedHitsU, usedHitsV, usedHitsW;
 
     for (const CaloHit *const pCaloHit : *pCaloHitListU)
         usedHitsU[pCaloHit] = false;
@@ -116,6 +117,13 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
             this->GetAssociatedTwoDHit(pCaloHit3D, pCaloHitListU, associatedHitsU, usedHitsU, TPC_VIEW_U);
             this->GetAssociatedTwoDHit(pCaloHit3D, pCaloHitListV, associatedHitsV, usedHitsV, TPC_VIEW_V);
             this->GetAssociatedTwoDHit(pCaloHit3D, pCaloHitListW, associatedHitsW, usedHitsW, TPC_VIEW_W);
+        }
+
+        if (!mergeList.empty())
+        {
+            PandoraContentApi::Cluster::Parameters parameters3D;
+            parameters3D.m_caloHitList = mergeList;
+            clusters3D.emplace_back(parameters3D);
         }
 
         if (!associatedHitsU.empty())
@@ -148,10 +156,21 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
             vetoList.insert(pAssociatedCaloHit);
         }
     }
-   
+ 
+    // 3D clusters
+    const ClusterList *pClusterList3D{nullptr};
+    std::string tempClusterListName;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList3D, tempClusterListName));
+    for (auto parameters : clusters3D)
+    {
+        const Cluster *pCluster3D{nullptr};
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster3D));
+    }
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_outputClusterListNames.at(3)));
+
+/*  
     // U View 
     const ClusterList *pClusterListU{nullptr};
-    std::string tempClusterListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterListU, tempClusterListName));
     for (auto parameters : clustersU)
     {
@@ -179,7 +198,7 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pClusterW));
     }
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_outputClusterListNames.at(2)));
-
+*/
     return STATUS_CODE_SUCCESS;
 }
 
@@ -215,7 +234,7 @@ void SimpleClusterCreationThreeDAlgorithm::CollectAssociatedHits(const CaloHit *
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SimpleClusterCreationThreeDAlgorithm::GetAssociatedTwoDHit(const CaloHit *const pCaloHit3D, const CaloHitList *const pCaloHitList2D, 
-    CaloHitList &associatedHits, std::map<const CaloHit*, bool> &usedHits2D, const HitType &hitType) const
+    CaloHitList &associatedHits, HitUsedMap &usedHits2D, const HitType &hitType) const
 {
     const CartesianVector posThreeD = pCaloHit3D->GetPositionVector();
     float wirePos{0.f};
@@ -229,7 +248,6 @@ void SimpleClusterCreationThreeDAlgorithm::GetAssociatedTwoDHit(const CaloHit *c
 
     for (const CaloHit *const pCaloHit2D : *pCaloHitList2D)
     {
-//        if (std::find(usedHits2D.begin(),usedHits2D.end(),pCaloHit2D) != usedHits2D.end())
         if (usedHits2D.at(pCaloHit2D) == true)
             continue;
 
@@ -272,6 +290,8 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::ReadSettings(const TiXmlHandle 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListNameV", tempClusterName));
     m_outputClusterListNames.push_back(tempClusterName);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListNameW", tempClusterName));
+    m_outputClusterListNames.push_back(tempClusterName);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName3D", tempClusterName));
     m_outputClusterListNames.push_back(tempClusterName);
     
 

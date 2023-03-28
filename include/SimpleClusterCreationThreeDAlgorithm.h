@@ -30,6 +30,7 @@ private:
     pandora::StatusCode Run();
 
     typedef std::unordered_map<const pandora::CaloHit *, pandora::CaloHitList> HitAssociationMap;
+    typedef std::unordered_map<const pandora::CaloHit *, bool> HitUsedMap;
 
     /**
      *  @brief Create map of associations between calo hits
@@ -71,7 +72,7 @@ private:
      *  @param hitType the type of hits in the hit list
      */  
     void GetAssociatedTwoDHit(const pandora::CaloHit *const pCaloHit3D, const pandora::CaloHitList *const pCaloHitList2D,
-        pandora::CaloHitList &associatedHits, std::map<const pandora::CaloHit*, bool> &usedHits2D, const pandora::HitType &hitType) const;
+        pandora::CaloHitList &associatedHits, HitUsedMap &usedHits2D, const pandora::HitType &hitType) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
