@@ -15,10 +15,10 @@
 #include "MasterThreeDAlgorithm.h"
 #include "SlicingThreeDAlgorithm.h"
 #include "PfoThreeDHitAssignmentAlgorithm.h" 
-#include "PrepareClusteringTwoDAlgorithm.h" 
+#include "ReplaceHitAndClusterListsAlgorithm.h" 
 #include "PreProcessingThreeDAlgorithm.h"
 #include "SimpleClusterCreationThreeDAlgorithm.h"
-
+#include "CreateTwoDClustersFromThreeDAlgorithm.h"
 #include "EventSlicingThreeDTool.h"
 #include "CompareToInputThreeDHitsTool.h"
 #include "LArNDContent.h"
@@ -27,9 +27,10 @@
 #define LAR_ND_ALGORITHM_LIST(d)                                                                                                   \
     d("LArMasterThreeD",                        MasterThreeDAlgorithm)                                                             \
     d("LArSimpleClusterCreationThreeD",         SimpleClusterCreationThreeDAlgorithm)                                              \
+    d("LArCreateTwoDClustersFromThreeD",        CreateTwoDClustersFromThreeDAlgorithm)                                             \
     d("LArSlicingThreeD",                       SlicingThreeDAlgorithm)                                                            \
     d("LArPfoThreeDHitAssignment",              PfoThreeDHitAssignmentAlgorithm)                                                   \
-    d("LArPrepareClusteringTwoD",               PrepareClusteringTwoDAlgorithm)                                                    \
+    d("LArReplaceHitAndClusterLists",           ReplaceHitAndClusterListsAlgorithm)                                                \
     d("LArPreProcessingThreeD",                 PreProcessingThreeDAlgorithm)                                                      \
 
 #define LAR_ND_ALGORITHM_TOOL_LIST(d)                                                                                              \
