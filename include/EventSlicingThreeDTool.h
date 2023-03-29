@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EventSlicingThreeDTool.h
+ *  @file   include/EventSlicingThreeDTool.h
  *
- *  @brief  Header file for the event slicing tool class.
+ *  @brief  Header file for the 3D event slicing tool class.
  *
  *  $Log: $
  */
@@ -14,7 +14,6 @@
 #include "SlicingThreeDAlgorithm.h"
 #include "LArSlice3D.h"
 
-//#include "larpandoracontent/LArControlFlow/EventSlicingBaseTool.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 

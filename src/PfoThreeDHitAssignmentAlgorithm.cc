@@ -1,5 +1,5 @@
 /**
- *  @file   PfoThreeDHitAssignmentAlgorithm.cc
+ *  @file   src/PfoThreeDHitAssignmentAlgorithm.cc
  *
  *  @brief  
  *
@@ -140,7 +140,7 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
         {
             if (candidatePfos.at(0) == candidatePfos.at(1) && candidatePfos.at(0) == candidatePfos.at(2))
                 bestPfoIndex = 0;
-            else if (candidatePfos.at(0) != candidatePfos.at(1) && candidatePfos.at(0) != candidatePfos.at(1))
+            else if (candidatePfos.at(0) != candidatePfos.at(1) && candidatePfos.at(0) != candidatePfos.at(2))
             {
                 const unsigned int nHitsPfo0(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(0)));
                 const unsigned int nHitsPfo1(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(1)));

@@ -1,7 +1,7 @@
 /**
  *  @file   src/SimpleClusterCreationThreeDAlgorithm.cc
  *
- *  @brief  Implementation of the cluster creation algorithm class.
+ *  @brief  Implementation of the 3D cluster creation algorithm class.
  *
  *  $Log: $
  */

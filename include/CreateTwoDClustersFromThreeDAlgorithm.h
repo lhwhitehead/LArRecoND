@@ -1,7 +1,7 @@
 /**
  *  @file   include/CreateTwoDClustersFromThreeDAlgorithm.h
  *
- *  @brief  Header file for the cluster creation algorithm class.
+ *  @brief  Header file for the 3D to 2D cluster creation alg
  *
  *  $Log: $
  */
@@ -38,7 +38,7 @@ private:
      *
      *  @param pCaloHit3D a pointer to the 3D hit
      *  @param pCaloHitList2D a pointer to the 2D hit list
-     *  @param associatedHits reference to empty hit list filled with 2D hits
+     *  @param associatedHits reference to empty hit list to be filled with 2D hits
      *  @param usedHits2D list of already used 2D hits
      *  @param hitType the type of hits in the hit list
      */  
@@ -47,9 +47,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::vector<std::string> m_inputCaloHitListNames2D;
-    std::string              m_inputClusterListName3D;
-    std::vector<std::string> m_outputClusterListNames;
+    std::vector<std::string> m_inputCaloHitListNames2D;  ///< Names of the input 2D hit lists
+    std::string              m_inputClusterListName3D;   ///< Name of the input 3D cluster list
+    std::vector<std::string> m_outputClusterListNames;   ///< Names of the output 2D cluster lists
 };
 
 } // namespace lar_content

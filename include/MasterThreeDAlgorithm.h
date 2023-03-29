@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/MasterThreeDAlgorithm.h
+ *  @file   include/MasterThreeDAlgorithm.h
  *
  *  @brief  Header file for the master algorithm class.
  *

@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/PreProcessingThreeDAlgorithm.cc
+ *  @file   src/PreProcessingThreeDAlgorithm.cc
  *
- *  @brief  Implementation of the list preparation algorithm class.
+ *  @brief  Implementation of the 3D list preparation algorithm class.
  *
  *  $Log: $
  */

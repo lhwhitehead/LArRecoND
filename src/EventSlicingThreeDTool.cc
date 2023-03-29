@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EventSlicingThreeDTool.cc
+ *  @file   src/EventSlicingThreeDTool.cc
  *
- *  @brief  Implementation of the event slicing tool class.
+ *  @brief  Implementation of the 3D event slicing tool class.
  *
  *  $Log: $
  */

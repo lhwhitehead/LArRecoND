@@ -1,7 +1,7 @@
 /**
  *  @file   src/CreateTwoDClustersFromThreeDAlgorithm.cc
  *
- *  @brief  Implementation of the cluster creation algorithm class.
+ *  @brief  Implementation of the 3D to 2D cluster creation algorithm.
  *
  *  $Log: $
  */

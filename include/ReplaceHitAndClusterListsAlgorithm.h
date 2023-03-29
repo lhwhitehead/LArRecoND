@@ -1,7 +1,7 @@
 /**
  *  @file   include/ReplaceHitAndClusterListsAlgorithm.h
  *
- *  @brief  Header file for the cluster creation algorithm class.
+ *  @brief  Header file for the class to replace current hit and cluster lists.
  *
  *  $Log: $
  */
@@ -31,8 +31,8 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string m_inputClusterListName;
-    std::string m_inputCaloHitListName;
+    std::string m_inputClusterListName;   ///< Name of the cluster list
+    std::string m_inputCaloHitListName;   ///< Name of the calo hit list
 };
 
 } // namespace lar_content

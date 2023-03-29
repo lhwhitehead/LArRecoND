@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/MasterThreeDAlgorithm.cc
+ *  @file   src/MasterThreeDAlgorithm.cc
  *
- *  @brief  Implementation of the master algorithm class.
+ *  @brief  Implementation of the 3D master algorithm class.
  *
  *  $Log: $
  */

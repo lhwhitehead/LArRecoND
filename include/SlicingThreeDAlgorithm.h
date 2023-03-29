@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/SlicingThreeDAlgorithm.h
+ *  @file   include/SlicingThreeDAlgorithm.h
  *
- *  @brief  Header file for the master algorithm class.
+ *  @brief  Header file for the 3D slicing algorithm.
  *
  *  $Log: $
  */

@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/SlicingThreeDAlgorithm.cc
+ *  @file   src/SlicingThreeDAlgorithm.cc
  *
- *  @brief  Implementation of the slicing algorithm class.
+ *  @brief  Implementation of the 3D slicing algorithm class.
  *
  *  $Log: $
  */
