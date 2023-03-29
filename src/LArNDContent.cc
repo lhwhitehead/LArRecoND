@@ -20,7 +20,6 @@
 #include "SimpleClusterCreationThreeDAlgorithm.h"
 #include "CreateTwoDClustersFromThreeDAlgorithm.h"
 #include "EventSlicingThreeDTool.h"
-#include "CompareToInputThreeDHitsTool.h"
 #include "LArNDContent.h"
 
 // clang-format off
@@ -35,7 +34,6 @@
 
 #define LAR_ND_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArEventSlicingThreeD",                  EventSlicingThreeDTool)                                                            \
-    d("LArCompareToInputThreeDHits",            CompareToInputThreeDHitsTool)                                                      \
 
 #define FACTORY Factory
 

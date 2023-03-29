@@ -365,38 +365,7 @@
         <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
         <OutputClusterListNames>TrackClusters3D ShowerClusters3D</OutputClusterListNames>
     </algorithm>
-<!--
-    <algorithm type = "LArThreeDHitCreation">
-        <InputPfoListName>TrackParticles3D</InputPfoListName>
-        <OutputCaloHitListName>TrackCaloHits3D</OutputCaloHitListName>
-        <OutputClusterListName>TrackClusters3D</OutputClusterListName>
-        <IterateTrackHits>false</IterateTrackHits>
-        <IterateShowerHits>false</IterateShowerHits>
-        <HitCreationTools>
-            <tool type = "LArCompareToInputThreeDHits"><InputCaloHitList3DName>CaloHitList3D</InputCaloHitList3DName></tool>
-            <tool type = "LArClearTransverseTrackHits"><MinViews>3</MinViews></tool>
-            <tool type = "LArClearLongitudinalTrackHits"><MinViews>3</MinViews></tool>
-            <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>3</MinViews></tool>
-            <tool type = "LArMultiValuedTransverseTrackHits"><MinViews>3</MinViews></tool>
-            <tool type = "LArClearTransverseTrackHits"><MinViews>2</MinViews></tool>
-            <tool type = "LArClearLongitudinalTrackHits"><MinViews>2</MinViews></tool>
-            <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>2</MinViews></tool>
-        </HitCreationTools>
-    </algorithm>
-    <algorithm type = "LArThreeDHitCreation">
-        <InputPfoListName>ShowerParticles3D</InputPfoListName>
-        <OutputCaloHitListName>ShowerCaloHits3D</OutputCaloHitListName>
-        <OutputClusterListName>ShowerClusters3D</OutputClusterListName>
-        <IterateTrackHits>false</IterateTrackHits>
-        <IterateShowerHits>false</IterateShowerHits>
-        <HitCreationTools>
-            <tool type = "LArCompareToInputThreeDHits"><InputCaloHitList3DName>CaloHitList3D</InputCaloHitList3DName></tool>
-            <tool type = "LArThreeViewShowerHits"/>
-            <tool type = "LArTwoViewShowerHits"/>
-            <tool type = "LArDeltaRayShowerHits"/>
-        </HitCreationTools>
-    </algorithm>
--->
+
     <!-- ThreeDMopUpAlgorithms -->
     <algorithm type = "LArSlidingConePfoMopUp">
         <InputPfoListNames>TrackParticles3D ShowerParticles3D</InputPfoListNames>
@@ -484,37 +453,6 @@
                 <OutputClusterListNames>TrackClusters3D ShowerClusters3D</OutputClusterListNames>
             </algorithm>
 
-<!--            <algorithm type = "LArThreeDHitCreation">
-                <InputPfoListName>TrackParticles3D</InputPfoListName>
-                <OutputCaloHitListName>TrackCaloHits3D</OutputCaloHitListName>
-                <OutputClusterListName>TrackClusters3D</OutputClusterListName>
-                <IterateTrackHits>false</IterateTrackHits>
-                <IterateShowerHits>false</IterateShowerHits>
-                <HitCreationTools>
-                    <tool type = "LArCompareToInputThreeDHits"><InputCaloHitList3DName>CaloHitList3D</InputCaloHitList3DName></tool>
-                    <tool type = "LArClearTransverseTrackHits"><MinViews>3</MinViews></tool>
-                    <tool type = "LArClearLongitudinalTrackHits"><MinViews>3</MinViews></tool>
-                    <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>3</MinViews></tool>
-                    <tool type = "LArMultiValuedTransverseTrackHits"><MinViews>3</MinViews></tool>
-                    <tool type = "LArClearTransverseTrackHits"><MinViews>2</MinViews></tool>
-                    <tool type = "LArClearLongitudinalTrackHits"><MinViews>2</MinViews></tool>
-                    <tool type = "LArMultiValuedLongitudinalTrackHits"><MinViews>2</MinViews></tool>
-                </HitCreationTools>
-            </algorithm>
-            <algorithm type = "LArThreeDHitCreation">
-                <InputPfoListName>ShowerParticles3D</InputPfoListName>
-                <OutputCaloHitListName>ShowerCaloHits3D</OutputCaloHitListName>
-                <OutputClusterListName>ShowerClusters3D</OutputClusterListName>
-                <IterateTrackHits>false</IterateTrackHits>
-                <IterateShowerHits>false</IterateShowerHits>
-                <HitCreationTools>
-                    <tool type = "LArCompareToInputThreeDHits"><InputCaloHitList3DName>CaloHitList3D</InputCaloHitList3DName></tool>
-                    <tool type = "LArThreeViewShowerHits"/>
-                    <tool type = "LArTwoViewShowerHits"/>
-                    <tool type = "LArDeltaRayShowerHits"/>
-                </HitCreationTools>
-            </algorithm>
--->
         </MopUpAlgorithms>
     </algorithm>
 
