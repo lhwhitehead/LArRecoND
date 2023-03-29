@@ -1,7 +1,7 @@
 /**
  *  @file   include/SimpleClusterCreationThreeDAlgorithm.h
  *
- *  @brief  Header file for the cluster creation algorithm class.
+ *  @brief  Header file for the 3D cluster creation algorithm class.
  *
  *  $Log: $
  */
@@ -62,25 +62,12 @@ private:
     void CollectAssociatedHits(const pandora::CaloHit *const pSeedCaloHit, const pandora::CaloHit *const pCurrentCaloHit,
         const HitAssociationMap &hitAssociationMap, const pandora::CaloHitSet &vetoList, pandora::CaloHitList &mergeList) const;
 
-    /**
-     *  @brief Get the hits in each view matching to the clustered 3D hits
-     *
-     *  @param pCaloHit3D a pointer to the 3D hit
-     *  @param pCaloHitList2D a pointer to the 2D hit list
-     *  @param associatedHits reference to empty hit list filled with 2D hits
-     *  @param usedHits2D list of already used 2D hits
-     *  @param hitType the type of hits in the hit list
-     */  
-    void GetAssociatedTwoDHit(const pandora::CaloHit *const pCaloHit3D, const pandora::CaloHitList *const pCaloHitList2D,
-        pandora::CaloHitList &associatedHits, HitUsedMap &usedHits2D, const pandora::HitType &hitType) const;
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float m_clusteringWindowSquared; ///< Maximum distance (squared) for two hits to be joined
 
-    std::vector<std::string> m_inputCaloHitListNames2D;
-    std::string              m_inputCaloHitListName3D;
-    std::vector<std::string> m_outputClusterListNames;
+    std::string m_inputCaloHitListName3D;     ///< Name of the input 3D calo hit list
+    std::string m_outputClusterListName3D;    ///< Names of the output 3D cluster list
 };
 
 } // namespace lar_content
