@@ -240,6 +240,11 @@ void MakePandoraTPC(const pandora::Pandora *const pPrimaryPandora, const Paramet
         geoparameters.m_isDriftInPositiveX = tpcNumber % 2;
 
         geom.AddTPC(centreX - dx, centreX + dx, centreY - dy, centreY + dy, centreZ - dz, centreZ + dz, tpcNumber);
+
+        std::cout << "Creating TPC: " << centreX - dx << ", " << centreX + dx << ", "
+                                      << centreY - dy << ", " << centreY + dy << ", "
+                                      << centreZ - dz << ", " << centreZ + dz << std::endl;
+
     }
     catch (const pandora::StatusCodeException &)
     {
@@ -550,7 +555,7 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
 
     // There is an offset in y due to a difference in the gdml file used here and the one used
     // during decoding. This can be removed once the data files have been remade
-    const float y_offset{22.0};
+    const float y_offset{0.0};
 
     for (int iEvt = startEvt; iEvt < endEvt; iEvt++)
     {
@@ -1817,8 +1822,8 @@ void ProcessFormatOption(const std::string &formatOption, const std::string &inp
         // Set the geometry file name
         parameters.m_geomFileName = geomFileName;
         // All lengths are already in cm, so don't rescale
-        parameters.m_lengthScale = 1.0f;
-//        parameters.m_lengthScale = parameters.m_mm2cm;
+//        parameters.m_lengthScale = 1.0f;
+        parameters.m_lengthScale = parameters.m_mm2cm;
         // All energies are already in GeV, so don't rescale
         parameters.m_energyScale = 1.0f;
         // Set expected input TTree name for space point data

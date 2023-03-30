@@ -105,23 +105,36 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
         }
     }
 
-    // Assign the hits to the correct Pfos
+    // Since there are three views, up to 3 pfos could contain a given 3D hit
     std::map<const ParticleFlowObject*, CaloHitList> pfoToHits;
-    for (const CaloHit *const pCaloHit : availableHits)
+    for (const CaloHit *const pCaloHit3D : availableHits)
     {
+        // Only add a given pfo once
         std::vector<const ParticleFlowObject*> candidatePfos;
-        if (availableHitToPfoU.count(pCaloHit))
-            candidatePfos.emplace_back(availableHitToPfoU.at(pCaloHit));
-        if (availableHitToPfoV.count(pCaloHit))
-            candidatePfos.emplace_back(availableHitToPfoV.at(pCaloHit));
-        if (availableHitToPfoW.count(pCaloHit))
-            candidatePfos.emplace_back(availableHitToPfoW.at(pCaloHit));
+        if (availableHitToPfoU.count(pCaloHit3D))
+        {
+            candidatePfos.emplace_back(availableHitToPfoU.at(pCaloHit3D));
+        }
+
+        if (availableHitToPfoV.count(pCaloHit3D))
+        {
+            const ParticleFlowObject* pPfoV = availableHitToPfoV.at(pCaloHit3D);
+            if(candidatePfos.empty() || candidatePfos.at(0) != pPfoV)
+                candidatePfos.emplace_back(pPfoV);
+        }
+
+        if (availableHitToPfoW.count(pCaloHit3D))
+        {
+            const ParticleFlowObject* pPfoW = availableHitToPfoW.at(pCaloHit3D);
+            if(std::find(candidatePfos.begin(),candidatePfos.end(),pPfoW) == candidatePfos.end())
+                candidatePfos.emplace_back(pPfoW);
+        }
 
         const size_t nPfos = candidatePfos.size();
         if (0 == nPfos)
             continue;
 
-        unsigned int bestPfoIndex{0};
+        unsigned int bestPfoIndex{999};
         if (1 == nPfos)
             bestPfoIndex = 0;
         else if (2 == nPfos)
@@ -138,13 +151,14 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
         }
         else if (3 == nPfos)
         {
-            if (candidatePfos.at(0) == candidatePfos.at(1) && candidatePfos.at(0) == candidatePfos.at(2))
+            if ((candidatePfos.at(0) == candidatePfos.at(1)) && (candidatePfos.at(0) == candidatePfos.at(2)))
                 bestPfoIndex = 0;
-            else if (candidatePfos.at(0) != candidatePfos.at(1) && candidatePfos.at(0) != candidatePfos.at(2))
+            else if ((candidatePfos.at(0) != candidatePfos.at(1)) && (candidatePfos.at(0) != candidatePfos.at(2)))
             {
                 const unsigned int nHitsPfo0(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(0)));
                 const unsigned int nHitsPfo1(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(1)));
                 const unsigned int nHitsPfo2(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(2)));
+
                 if (nHitsPfo0 >= nHitsPfo1 && nHitsPfo0 >= nHitsPfo2)
                     bestPfoIndex = 0;
                 else if (nHitsPfo1 >= nHitsPfo0 && nHitsPfo1 >= nHitsPfo2)
@@ -166,7 +180,7 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
         {
             pfoToHits[candidatePfos.at(bestPfoIndex)] = CaloHitList();
         }
-        pfoToHits[candidatePfos.at(bestPfoIndex)].emplace_back(pCaloHit);
+        pfoToHits[candidatePfos.at(bestPfoIndex)].emplace_back(pCaloHit3D);
     }
 
     // Assign the hits

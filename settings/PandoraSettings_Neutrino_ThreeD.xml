@@ -69,89 +69,6 @@
         <ClusterListNames>Clusters3D</ClusterListNames>
     </algorithm>
 
-    <!-- TwoDReconstruction -->
-<!--    <algorithm type = "LArClusteringParent">
-        <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
-        <InputCaloHitListName>CaloHitListU</InputCaloHitListName>
-        <ClusterListName>ClustersU</ClusterListName>
-        <ReplaceCurrentCaloHitList>true</ReplaceCurrentCaloHitList>
-        <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
-    </algorithm>
-    <algorithm type = "LArReplaceHitAndClusterLists">
-        <InputClusterListName>ClustersU</InputClusterListName>
-        <InputCaloHitListName>CaloHitListU</InputCaloHitListName>
-    </algorithm>
-    <algorithm type = "LArLayerSplitting"/>
-    <algorithm type = "LArLongitudinalAssociation"/>
-    <algorithm type = "LArTransverseAssociation"/>
-    <algorithm type = "LArLongitudinalExtension"/>
-    <algorithm type = "LArTransverseExtension"/>
-    <algorithm type = "LArCrossGapsAssociation"/>
-    <algorithm type = "LArCrossGapsExtension"/>
-    <algorithm type = "LArOvershootSplitting"/>
-    <algorithm type = "LArBranchSplitting"/>
-    <algorithm type = "LArKinkSplitting"/>
-    <algorithm type = "LArTrackConsolidation">
-        <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
-    </algorithm>
-    <algorithm type = "LArHitWidthClusterMerging"/>
--->
-
-<!--    <algorithm type = "LArClusteringParent">
-        <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
-        <InputCaloHitListName>CaloHitListV</InputCaloHitListName>
-        <ClusterListName>ClustersV</ClusterListName>
-        <ReplaceCurrentCaloHitList>true</ReplaceCurrentCaloHitList>
-        <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
-    </algorithm>
-    <algorithm type = "LArReplaceHitAndClusterLists">
-        <InputClusterListName>ClustersV</InputClusterListName>
-        <InputCaloHitListName>CaloHitListV</InputCaloHitListName>
-    </algorithm>
-    <algorithm type = "LArLayerSplitting"/>
-    <algorithm type = "LArLongitudinalAssociation"/>
-    <algorithm type = "LArTransverseAssociation"/>
-    <algorithm type = "LArLongitudinalExtension"/>
-    <algorithm type = "LArTransverseExtension"/>
-    <algorithm type = "LArCrossGapsAssociation"/>
-    <algorithm type = "LArCrossGapsExtension"/>
-    <algorithm type = "LArOvershootSplitting"/>
-    <algorithm type = "LArBranchSplitting"/>
-    <algorithm type = "LArKinkSplitting"/>
-    <algorithm type = "LArTrackConsolidation">
-        <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
-    </algorithm>
-    <algorithm type = "LArHitWidthClusterMerging"/>
--->
-
-<!--
-    <algorithm type = "LArClusteringParent">
-        <algorithm type = "LArTrackClusterCreation" description = "ClusterFormation"/>
-        <InputCaloHitListName>CaloHitListW</InputCaloHitListName>
-        <ClusterListName>ClustersW</ClusterListName>
-        <ReplaceCurrentCaloHitList>true</ReplaceCurrentCaloHitList>
-        <ReplaceCurrentClusterList>true</ReplaceCurrentClusterList>
-    </algorithm>
-    <algorithm type = "LArReplaceHitAndClusterLists">
-        <InputClusterListName>ClustersW</InputClusterListName>
-        <InputCaloHitListName>CaloHitListW</InputCaloHitListName>
-    </algorithm>
-    <algorithm type = "LArLayerSplitting"/>
-    <algorithm type = "LArLongitudinalAssociation"/>
-    <algorithm type = "LArTransverseAssociation"/>
-    <algorithm type = "LArLongitudinalExtension"/>
-    <algorithm type = "LArTransverseExtension"/>
-    <algorithm type = "LArCrossGapsAssociation"/>
-    <algorithm type = "LArCrossGapsExtension"/>
-    <algorithm type = "LArOvershootSplitting"/>
-    <algorithm type = "LArBranchSplitting"/>
-    <algorithm type = "LArKinkSplitting"/>
-    <algorithm type = "LArTrackConsolidation">
-        <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
-    </algorithm>
-    <algorithm type = "LArHitWidthClusterMerging"/>
--->
-
     <!-- VertexAlgorithms -->
     <algorithm type = "LArCutClusterCharacterisation">
         <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
@@ -235,12 +152,12 @@
         </TrackTools>
         <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
     </algorithm>
-<!--
+
     <algorithm type = "LArVisualMonitoring">
         <PfoListNames>TrackParticles3D</PfoListNames>
         <ShowDetector>true</ShowDetector>
     </algorithm>
--->
+
     <!-- ThreeDShowerAlgorithms -->
     <algorithm type = "LArCutPfoCharacterisation">
         <TrackPfoListName>TrackParticles3D</TrackPfoListName>
@@ -456,6 +373,7 @@
         </MopUpAlgorithms>
     </algorithm>
 
+
     <algorithm type = "LArVisualMonitoring">
         <PfoListNames>TrackParticles3D ShowerParticles3D</PfoListNames>
         <ShowDetector>true</ShowDetector>
@@ -531,7 +449,7 @@
     <algorithm type = "LArPostProcessing">
         <PfoListNames>NeutrinoParticles3D TrackParticles3D ShowerParticles3D</PfoListNames>
         <VertexListNames>NeutrinoVertices3D DaughterVertices3D CandidateVertices3D</VertexListNames>
-        <ClusterListNames>ClustersU ClustersV ClustersW Clusters3D TrackClusters3D ShowerClusters3D</ClusterListNames>
+        <ClusterListNames>ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</ClusterListNames>
         <CaloHitListNames>CaloHitListU CaloHitListV CaloHitListW CaloHitList2D CaloHitList3D</CaloHitListNames>
         <CurrentPfoListReplacement>NeutrinoParticles3D</CurrentPfoListReplacement>
     </algorithm>

@@ -236,7 +236,7 @@
         </tool>
         <algorithm type = "LArListDeletion" description = "SlicingListDeletion">
             <PfoListNames>TrackParticles3D ShowerParticles3D</PfoListNames>
-            <ClusterListNames>ClustersU ClustersV ClustersW Clusters3D TrackClusters3D ShowerClusters3D</ClusterListNames>
+            <ClusterListNames>ClustersU ClustersV ClustersW TrackClusters3D ShowerClusters3D</ClusterListNames>
         </algorithm>
     </algorithm>
     <algorithm type = "LArListChanging">
