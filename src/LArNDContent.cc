@@ -19,6 +19,7 @@
 #include "PreProcessingThreeDAlgorithm.h"
 #include "SimpleClusterCreationThreeDAlgorithm.h"
 #include "CreateTwoDClustersFromThreeDAlgorithm.h"
+#include "CandidateVertexCreationThreeDAlgorithm.h" 
 #include "EventSlicingThreeDTool.h"
 #include "LArNDContent.h"
 
@@ -31,6 +32,7 @@
     d("LArPfoThreeDHitAssignment",              PfoThreeDHitAssignmentAlgorithm)                                                   \
     d("LArReplaceHitAndClusterLists",           ReplaceHitAndClusterListsAlgorithm)                                                \
     d("LArPreProcessingThreeD",                 PreProcessingThreeDAlgorithm)                                                      \
+    d("LArCandidateVertexCreationThreeD",       CandidateVertexCreationThreeDAlgorithm)                                            \
 
 #define LAR_ND_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArEventSlicingThreeD",                  EventSlicingThreeDTool)                                                            \

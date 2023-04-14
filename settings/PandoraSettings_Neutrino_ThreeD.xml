@@ -26,11 +26,6 @@
         <OutputClusterListName3D>Clusters3D</OutputClusterListName3D>
     </algorithm>
 
-    <algorithm type = "LArVisualMonitoring">
-        <ClusterListNames>Clusters3D</ClusterListNames>
-        <ShowDetector>true</ShowDetector>
-    </algorithm>
-
     <algorithm type = "LArReplaceHitAndClusterLists">
         <InputClusterListName>Clusters3D</InputClusterListName>
         <InputCaloHitListName>CaloHitList3D</InputCaloHitListName>
@@ -59,16 +54,6 @@
         <OutputClusterListNameW>ClustersW</OutputClusterListNameW>
     </algorithm>
 
-    <algorithm type = "LArVisualMonitoring">
-        <ClusterListNames>Clusters3D ClustersU ClustersV ClustersW</ClusterListNames>
-        <ShowDetector>true</ShowDetector>
-    </algorithm>
-
-    <!-- We have made the 2D clusters, so remove 3D for now to make hits available later -->
-    <algorithm type = "LArListDeletion" description = "3DClusterDeletion">
-        <ClusterListNames>Clusters3D</ClusterListNames>
-    </algorithm>
-
     <!-- VertexAlgorithms -->
     <algorithm type = "LArCutClusterCharacterisation">
         <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
@@ -77,12 +62,21 @@
         <PathLengthRatioCut>1.012</PathLengthRatioCut>
         <ShowerWidthRatioCut>0.2</ShowerWidthRatioCut>
     </algorithm>
-    <algorithm type = "LArCandidateVertexCreation">
-        <InputClusterListNames>ClustersU ClustersV ClustersW</InputClusterListNames>
+    <algorithm type = "LArCandidateVertexCreationThreeD">
+        <InputClusterListName>Clusters3D</InputClusterListName>
         <OutputVertexListName>CandidateVertices3D</OutputVertexListName>
         <ReplaceCurrentVertexList>true</ReplaceCurrentVertexList>
         <EnableCrossingCandidates>false</EnableCrossingCandidates>
         <ReducedCandidates>true</ReducedCandidates>
+    </algorithm>
+    <algorithm type = "LArVisualMonitoring">
+        <VertexListNames>CandidateVertices3D</VertexListNames>
+        <ClusterListNames>Clusters3D</ClusterListNames>
+        <ShowDetector>true</ShowDetector>
+    </algorithm>
+    <!-- We have made the 2D clusters, so remove 3D for now to make hits available later -->
+    <algorithm type = "LArListDeletion" description = "3DClusterDeletion">
+        <ClusterListNames>Clusters3D</ClusterListNames>
     </algorithm>
     <algorithm type = "LArBdtVertexSelection">
         <InputCaloHitListNames>CaloHitListU CaloHitListV CaloHitListW</InputCaloHitListNames>
@@ -151,11 +145,6 @@
             <tool type = "LArClearTrackFragments"/>
         </TrackTools>
         <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
-    </algorithm>
-
-    <algorithm type = "LArVisualMonitoring">
-        <PfoListNames>TrackParticles3D</PfoListNames>
-        <ShowDetector>true</ShowDetector>
     </algorithm>
 
     <!-- ThreeDShowerAlgorithms -->
@@ -371,12 +360,6 @@
             </algorithm>
 
         </MopUpAlgorithms>
-    </algorithm>
-
-
-    <algorithm type = "LArVisualMonitoring">
-        <PfoListNames>TrackParticles3D ShowerParticles3D</PfoListNames>
-        <ShowDetector>true</ShowDetector>
     </algorithm>
 
     <!-- Neutrino creation and hierarchy building -->
