@@ -81,6 +81,8 @@ void EventSlicingThreeDTool::RunSlicing(const Algorithm *const pAlgorithm, const
         ClusterToSliceIndexMap clusterToSliceIndexMap;
         this->CreateSlices(clusterSliceList, sliceList, clusterToSliceIndexMap);
 
+        std::cout << "Event slicing produced " << sliceList.size() << " slices" << std::endl;
+
         ClusterSet assignedClusters;
         this->CopyPfoHitsToSlices(clusterToSliceIndexMap, clusterToPfoMap, sliceList, assignedClusters);
 

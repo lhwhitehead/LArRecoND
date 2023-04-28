@@ -44,6 +44,20 @@
         <algorithm type = "LArSimpleClusterCreation" description = "ClusterRebuilding"/>
     </algorithm>
 
+    <algorithm type = "LArCutClusterCharacterisationThreeD">
+        <InputClusterListNames>Clusters3D</InputClusterListNames>
+        <PathLengthRatioCut>5.0</PathLengthRatioCut>
+        <OverwriteExistingId>true</OverwriteExistingId>
+    </algorithm>
+
+    <algorithm type = "LArMergeClearTracksThreeD">
+        <InputClusterListName>Clusters3D</InputClusterListName>
+        <SlidingFitWindow>10</SlidingFitWindow>
+        <MaxGapLengthCut>30.0</MaxGapLengthCut>
+        <MaxGapTransverseCut>3.0</MaxGapTransverseCut>
+        <MinCosThetaCut>0.96</MinCosThetaCut>
+    </algorithm>
+
     <algorithm type = "LArCreateTwoDClustersFromThreeD">
         <InputCaloHitListNameU>CaloHitListU</InputCaloHitListNameU>
         <InputCaloHitListNameV>CaloHitListV</InputCaloHitListNameV>
@@ -154,6 +168,8 @@
         <UseThreeDInformation>false</UseThreeDInformation>
 <!--        <MaxShowerLengthCut>500.</MaxShowerLengthCut> -->
         <VertexDistanceRatioCut>500.</VertexDistanceRatioCut>
+        <SlidingFitWindow>10</SlidingFitWindow>
+        <ShowerWidthRatioCut>2.0</ShowerWidthRatioCut> 
     </algorithm>
     <algorithm type = "LArListDeletion">
         <PfoListNames>ShowerParticles3D</PfoListNames>
