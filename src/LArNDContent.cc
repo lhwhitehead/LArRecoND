@@ -13,12 +13,14 @@
 #include "Pandora/Pandora.h"
 
 #include "MasterThreeDAlgorithm.h"
+#include "MergeClearTracksThreeDAlgorithm.h"
 #include "SlicingThreeDAlgorithm.h"
 #include "PfoThreeDHitAssignmentAlgorithm.h" 
 #include "ReplaceHitAndClusterListsAlgorithm.h" 
 #include "PreProcessingThreeDAlgorithm.h"
 #include "SimpleClusterCreationThreeDAlgorithm.h"
 #include "CreateTwoDClustersFromThreeDAlgorithm.h"
+#include "CutClusterCharacterisationThreeDAlgorithm.h"
 #include "CandidateVertexCreationThreeDAlgorithm.h" 
 #include "EventSlicingThreeDTool.h"
 #include "LArNDContent.h"
@@ -26,12 +28,14 @@
 // clang-format off
 #define LAR_ND_ALGORITHM_LIST(d)                                                                                                   \
     d("LArMasterThreeD",                        MasterThreeDAlgorithm)                                                             \
+    d("LArMergeClearTracksThreeD",              MergeClearTracksThreeDAlgorithm)                                                   \
     d("LArSimpleClusterCreationThreeD",         SimpleClusterCreationThreeDAlgorithm)                                              \
     d("LArCreateTwoDClustersFromThreeD",        CreateTwoDClustersFromThreeDAlgorithm)                                             \
     d("LArSlicingThreeD",                       SlicingThreeDAlgorithm)                                                            \
     d("LArPfoThreeDHitAssignment",              PfoThreeDHitAssignmentAlgorithm)                                                   \
     d("LArReplaceHitAndClusterLists",           ReplaceHitAndClusterListsAlgorithm)                                                \
     d("LArPreProcessingThreeD",                 PreProcessingThreeDAlgorithm)                                                      \
+    d("LArCutClusterCharacterisationThreeD",    CutClusterCharacterisationThreeDAlgorithm)                                         \
     d("LArCandidateVertexCreationThreeD",       CandidateVertexCreationThreeDAlgorithm)                                            \
 
 #define LAR_ND_ALGORITHM_TOOL_LIST(d)                                                                                              \
