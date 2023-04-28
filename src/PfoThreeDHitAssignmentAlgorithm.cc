@@ -55,7 +55,13 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
     {
         const std::string pfoListName(m_inputPfoListNames.at(i));
         const PfoList *pPfoList{nullptr};
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, pfoListName, pPfoList));
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, pfoListName, pPfoList));
+        if (!pPfoList || pPfoList->empty())
+        {
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "PfoThreeDHitAssignment: couldn't find pfo list " << pfoListName << std::endl;
+            continue;
+        }
 
         for (const ParticleFlowObject *pPfo : (*pPfoList))
         {
@@ -105,82 +111,103 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
         }
     }
 
-    // Since there are three views, up to 3 pfos could contain a given 3D hit
-    std::map<const ParticleFlowObject*, CaloHitList> pfoToHits;
+    CaloHitList threeDHitsMatchedToOnePfo;
+    CaloHitList threeDHitsMatchedToMultiPfos;
+
+    std::map<const CaloHit *, PfoVector> hits3DToPfos;
     for (const CaloHit *const pCaloHit3D : availableHits)
     {
-        // Only add a given pfo once
-        std::vector<const ParticleFlowObject*> candidatePfos;
+        PfoVector matchedPfos;
+
+        // For U we can always add the pfo as it is first
         if (availableHitToPfoU.count(pCaloHit3D))
         {
-            candidatePfos.emplace_back(availableHitToPfoU.at(pCaloHit3D));
+            if (std::find(matchedPfos.begin(), matchedPfos.end(), availableHitToPfoU.at(pCaloHit3D)) == matchedPfos.end())
+                matchedPfos.emplace_back(availableHitToPfoU.at(pCaloHit3D));
         }
-
+           
         if (availableHitToPfoV.count(pCaloHit3D))
         {
-            const ParticleFlowObject* pPfoV = availableHitToPfoV.at(pCaloHit3D);
-            if(candidatePfos.empty() || candidatePfos.at(0) != pPfoV)
-                candidatePfos.emplace_back(pPfoV);
+            if (std::find(matchedPfos.begin(), matchedPfos.end(), availableHitToPfoV.at(pCaloHit3D)) == matchedPfos.end())
+                matchedPfos.emplace_back(availableHitToPfoV.at(pCaloHit3D));
         }
 
         if (availableHitToPfoW.count(pCaloHit3D))
         {
-            const ParticleFlowObject* pPfoW = availableHitToPfoW.at(pCaloHit3D);
-            if(std::find(candidatePfos.begin(),candidatePfos.end(),pPfoW) == candidatePfos.end())
-                candidatePfos.emplace_back(pPfoW);
+            if (std::find(matchedPfos.begin(), matchedPfos.end(), availableHitToPfoW.at(pCaloHit3D)) == matchedPfos.end())
+                matchedPfos.emplace_back(availableHitToPfoW.at(pCaloHit3D));
         }
 
-        const size_t nPfos = candidatePfos.size();
+        if (!hits3DToPfos.count(pCaloHit3D))
+            hits3DToPfos[pCaloHit3D] = matchedPfos;
+
+        const unsigned int nPfos(matchedPfos.size());
         if (0 == nPfos)
             continue;
+        else if (1 == nPfos)
+            threeDHitsMatchedToOnePfo.emplace_back(pCaloHit3D);
+        else
+            threeDHitsMatchedToMultiPfos.emplace_back(pCaloHit3D);
+    }
 
-        unsigned int bestPfoIndex{999};
-        if (1 == nPfos)
-            bestPfoIndex = 0;
-        else if (2 == nPfos)
-        {
-            if (candidatePfos.at(0) == candidatePfos.at(1))
-                bestPfoIndex = 0;
-            else
-            {
-                // If the hits are attached to different pfos then add the 3D hit to the biggest one
-                const unsigned int nHitsPfo0(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(0)));
-                const unsigned int nHitsPfo1(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(1)));
-                bestPfoIndex = (nHitsPfo0 >= nHitsPfo1) ? 0 : 1;
-            }
-        }
-        else if (3 == nPfos)
-        {
-            if ((candidatePfos.at(0) == candidatePfos.at(1)) && (candidatePfos.at(0) == candidatePfos.at(2)))
-                bestPfoIndex = 0;
-            else if ((candidatePfos.at(0) != candidatePfos.at(1)) && (candidatePfos.at(0) != candidatePfos.at(2)))
-            {
-                const unsigned int nHitsPfo0(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(0)));
-                const unsigned int nHitsPfo1(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(1)));
-                const unsigned int nHitsPfo2(LArPfoHelper::GetNumberOfTwoDHits(candidatePfos.at(2)));
+    std::map<const ParticleFlowObject*, CaloHitList> pfoToHits;
 
-                if (nHitsPfo0 >= nHitsPfo1 && nHitsPfo0 >= nHitsPfo2)
-                    bestPfoIndex = 0;
-                else if (nHitsPfo1 >= nHitsPfo0 && nHitsPfo1 >= nHitsPfo2)
-                    bestPfoIndex = 1;
-                else
-                    bestPfoIndex = 2;   
-            }
-            else
+    // Deal with the unambiguous 3D hits first
+    for (const CaloHit *const pCaloHit3D : threeDHitsMatchedToOnePfo)
+    {
+        const ParticleFlowObject *const pPfo = hits3DToPfos[pCaloHit3D][0];
+        if (!pfoToHits.count(pPfo))
+            pfoToHits[pPfo] = CaloHitList();
+        pfoToHits[pPfo].emplace_back(pCaloHit3D);
+
+    }
+
+    // If a 3D hit has 2D hits in more than one pfo we have a decision to make
+    for (const CaloHit *const pCaloHit3D : threeDHitsMatchedToMultiPfos)
+    {
+        if (!hits3DToPfos.count(pCaloHit3D))
+            continue;
+
+        const PfoVector &pfoList = hits3DToPfos[pCaloHit3D];
+
+        int bestIndex{-999};
+        int mostHits{0};
+        int biggestPfoIndex{-999};
+        float minDist = std::numeric_limits<float>::max();
+
+        for (unsigned int iPfo = 0; iPfo < pfoList.size(); ++iPfo)
+        {
+            const ParticleFlowObject *const pPfo = pfoList[iPfo];
+
+            const int n2DHits = LArPfoHelper::GetNumberOfTwoDHits(pPfo);
+            if (mostHits < n2DHits)
             {
-                // We are in the best two of three situation - pick the pfo with two hits
-                if (candidatePfos.at(0) == candidatePfos.at(1) || candidatePfos.at(0) == candidatePfos.at(2))
-                    bestPfoIndex = 0;
-                else
-                    bestPfoIndex = 1;
+                mostHits = n2DHits;
+                biggestPfoIndex = iPfo;
+            }
+
+            if (!pfoToHits.count(pPfo))
+                continue;
+
+            const CartesianVector hit3DPos = pCaloHit3D->GetPositionVector();
+            for (const CaloHit *const pPfoHit : pfoToHits.at(pPfo))
+            {
+                const float dist = (hit3DPos - pPfoHit->GetPositionVector()).GetMagnitude();
+                if (minDist > dist)
+                {
+                    minDist = dist;
+                    bestIndex = iPfo;
+                }
             }
         }
         
-        if (!pfoToHits.count(candidatePfos.at(bestPfoIndex)))
-        {
-            pfoToHits[candidatePfos.at(bestPfoIndex)] = CaloHitList();
-        }
-        pfoToHits[candidatePfos.at(bestPfoIndex)].emplace_back(pCaloHit3D);
+        // If no best index was found, use the pfo with the most 2D hits
+        if (bestIndex < 0)
+            bestIndex = biggestPfoIndex;        
+
+        if (!pfoToHits.count(pfoList[bestIndex]))
+            pfoToHits[pfoList[bestIndex]] = CaloHitList();
+        pfoToHits[pfoList[bestIndex]].emplace_back(pCaloHit3D);
     }
 
     // Assign the hits
