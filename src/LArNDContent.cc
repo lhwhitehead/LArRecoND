@@ -21,7 +21,8 @@
 #include "SimpleClusterCreationThreeDAlgorithm.h"
 #include "CreateTwoDClustersFromThreeDAlgorithm.h"
 #include "CutClusterCharacterisationThreeDAlgorithm.h"
-#include "CandidateVertexCreationThreeDAlgorithm.h" 
+#include "CandidateVertexCreationThreeDAlgorithm.h"
+#include "NDValidationAlgorithm.h"
 #include "EventSlicingThreeDTool.h"
 #include "LArNDContent.h"
 
@@ -37,6 +38,7 @@
     d("LArPreProcessingThreeD",                 PreProcessingThreeDAlgorithm)                                                      \
     d("LArCutClusterCharacterisationThreeD",    CutClusterCharacterisationThreeDAlgorithm)                                         \
     d("LArCandidateVertexCreationThreeD",       CandidateVertexCreationThreeDAlgorithm)                                            \
+    d("LArNDValidation",                        NDValidationAlgorithm)                                                             \
 
 #define LAR_ND_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArEventSlicingThreeD",                  EventSlicingThreeDTool)                                                            \
