@@ -10,8 +10,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "MasterThreeDAlgorithm.h"
 #include "LArNDContent.h"
+#include "MasterThreeDAlgorithm.h"
 
 #include "larpandoracontent/LArContent.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -136,7 +136,6 @@ StatusCode MasterThreeDAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeI
 
     return STATUS_CODE_SUCCESS;
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -356,10 +355,10 @@ StatusCode MasterThreeDAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &
         {
             larTPCHitList.m_truncatedHitList.push_back(pCaloHit);
         }
-        else std::cout << "Hit of type " << pCaloHit->GetHitType() << " outside TPC " << volumeId << "? " 
-                       << pCaloHit->GetPositionVector().GetX() << ", "
-                       << pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX() << ", "
-                       << pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX() << std::endl;
+        else
+            std::cout << "Hit of type " << pCaloHit->GetHitType() << " outside TPC " << volumeId << "? "
+                      << pCaloHit->GetPositionVector().GetX() << ", " << pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX() << ", "
+                      << pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX() << std::endl;
     }
 
     return STATUS_CODE_SUCCESS;

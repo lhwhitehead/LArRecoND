@@ -12,19 +12,19 @@
 #include "Pandora/AlgorithmTool.h"
 #include "Pandora/Pandora.h"
 
-#include "MasterThreeDAlgorithm.h"
-#include "MergeClearTracksThreeDAlgorithm.h"
-#include "SlicingThreeDAlgorithm.h"
-#include "PfoThreeDHitAssignmentAlgorithm.h" 
-#include "ReplaceHitAndClusterListsAlgorithm.h" 
-#include "PreProcessingThreeDAlgorithm.h"
-#include "SimpleClusterCreationThreeDAlgorithm.h"
+#include "CandidateVertexCreationThreeDAlgorithm.h"
 #include "CreateTwoDClustersFromThreeDAlgorithm.h"
 #include "CutClusterCharacterisationThreeDAlgorithm.h"
-#include "CandidateVertexCreationThreeDAlgorithm.h"
-#include "NDValidationAlgorithm.h"
 #include "EventSlicingThreeDTool.h"
 #include "LArNDContent.h"
+#include "MasterThreeDAlgorithm.h"
+#include "MergeClearTracksThreeDAlgorithm.h"
+#include "NDValidationAlgorithm.h"
+#include "PfoThreeDHitAssignmentAlgorithm.h"
+#include "PreProcessingThreeDAlgorithm.h"
+#include "ReplaceHitAndClusterListsAlgorithm.h"
+#include "SimpleClusterCreationThreeDAlgorithm.h"
+#include "SlicingThreeDAlgorithm.h"
 
 // clang-format off
 #define LAR_ND_ALGORITHM_LIST(d)                                                                                                   \

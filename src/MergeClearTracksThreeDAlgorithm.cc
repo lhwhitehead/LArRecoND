@@ -9,8 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
@@ -65,7 +65,7 @@ bool MergeClearTracksThreeDAlgorithm::FindMerges(const ClusterList *const pClust
     ClusterMergeMap mergeCandidates;
     ClusterFloatMap mergeClosestDistance;
 
-//    std::cout << "Looking for merges between " << sortedClusters.size() << " track-like clusters" << std::endl;
+    //    std::cout << "Looking for merges between " << sortedClusters.size() << " track-like clusters" << std::endl;
     for (ClusterVector::iterator iter1 = sortedClusters.begin(); iter1 != sortedClusters.end(); ++iter1)
     {
         for (ClusterVector::iterator iter2 = iter1 + 1; iter2 != sortedClusters.end(); ++iter2)
@@ -80,9 +80,9 @@ bool MergeClearTracksThreeDAlgorithm::FindMerges(const ClusterList *const pClust
         ClusterSet usedClusters;
         for (auto const &pair : mergeCandidates)
         {
-            if(!usedClusters.count(pair.second) && !usedClusters.count(pair.first))
+            if (!usedClusters.count(pair.second) && !usedClusters.count(pair.first))
             {
-//                std::cout << "Merging clusters: " << pair.first << " and " << pair.second << std::endl;
+                //                std::cout << "Merging clusters: " << pair.first << " and " << pair.second << std::endl;
                 this->MergeClusters(pair.first, pair.second);
                 usedClusters.insert(pair.first);
                 usedClusters.insert(pair.second);
@@ -96,7 +96,8 @@ bool MergeClearTracksThreeDAlgorithm::FindMerges(const ClusterList *const pClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MergeClearTracksThreeDAlgorithm::CanMergeClusters(const Cluster *const pLargeCluster, const Cluster *const pSmallCluster, ClusterMergeMap &mergeCandidates, ClusterFloatMap &mergeDistance) const
+void MergeClearTracksThreeDAlgorithm::CanMergeClusters(const Cluster *const pLargeCluster, const Cluster *const pSmallCluster,
+    ClusterMergeMap &mergeCandidates, ClusterFloatMap &mergeDistance) const
 {
     try
     {
@@ -105,7 +106,7 @@ void MergeClearTracksThreeDAlgorithm::CanMergeClusters(const Cluster *const pLar
 
         LArPointingCluster::Vertex largeClusterVertex, smallClusterVertex;
         LArPointingClusterHelper::GetClosestVertices(largePointingCluster, smallPointingCluster, largeClusterVertex, smallClusterVertex);
-    
+
         float longitudinalGap(std::numeric_limits<float>::max());
         float transverseGap(std::numeric_limits<float>::max());
         LArPointingClusterHelper::GetImpactParameters(largeClusterVertex, smallClusterVertex, longitudinalGap, transverseGap);
@@ -115,16 +116,16 @@ void MergeClearTracksThreeDAlgorithm::CanMergeClusters(const Cluster *const pLar
         const CartesianVector &largeClusterDirection(largeClusterVertex.GetDirection());
         const CartesianVector &smallClusterDirection(smallClusterVertex.GetDirection());
         const float cosAngle = largeClusterDirection.GetCosOpeningAngle(smallClusterDirection * -1.0);
-        
-//        std::cout << pLargeCluster << " " << pSmallCluster << " :: Longitudinal gap = " << longitudinalGap << ", transverse gap = "
-//                  << transverseGap << " and angle = " << cosAngle << std::endl;
-    
-        if ( longitudinalGap <= m_maxGapLengthCut && transverseGap <= m_maxGapTransverseCut && cosAngle >= m_minCosThetaCut)
+
+        //        std::cout << pLargeCluster << " " << pSmallCluster << " :: Longitudinal gap = " << longitudinalGap << ", transverse gap = "
+        //                  << transverseGap << " and angle = " << cosAngle << std::endl;
+
+        if (longitudinalGap <= m_maxGapLengthCut && transverseGap <= m_maxGapTransverseCut && cosAngle >= m_minCosThetaCut)
         {
             if (!mergeCandidates.count(pLargeCluster))
             {
-                mergeCandidates.insert(std::make_pair(pLargeCluster,pSmallCluster));
-                mergeDistance.insert(std::make_pair(pLargeCluster,longitudinalGap));
+                mergeCandidates.insert(std::make_pair(pLargeCluster, pSmallCluster));
+                mergeDistance.insert(std::make_pair(pLargeCluster, longitudinalGap));
             }
             else
             {
@@ -135,7 +136,6 @@ void MergeClearTracksThreeDAlgorithm::CanMergeClusters(const Cluster *const pLar
                 }
             }
         }
-    
     }
     catch (const StatusCodeException &)
     {
@@ -157,17 +157,14 @@ StatusCode MergeClearTracksThreeDAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGapLengthCut", m_maxGapLengthCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGapLengthCut", m_maxGapLengthCut));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGapTransverseCut", m_maxGapTransverseCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosThetaCut", m_minCosThetaCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosThetaCut", m_minCosThetaCut));
 
-    PANDORA_RETURN_RESULT_IF(
-        STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
 
     return STATUS_CODE_SUCCESS;
 }

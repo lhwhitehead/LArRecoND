@@ -88,8 +88,8 @@ StatusCode CreateTwoDClustersFromThreeDAlgorithm::Run()
 
     // Create new clusters
     std::string tempClusterListName;
-  
-    // U View 
+
+    // U View
     const ClusterList *pClusterListU{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterListU, tempClusterListName));
     for (auto parameters : clustersU)
@@ -121,13 +121,12 @@ StatusCode CreateTwoDClustersFromThreeDAlgorithm::Run()
 
     return STATUS_CODE_SUCCESS;
 
-
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CreateTwoDClustersFromThreeDAlgorithm::GetAssociatedTwoDHit(const CaloHit *const pCaloHit3D, const CaloHitList *const pCaloHitList2D, 
+void CreateTwoDClustersFromThreeDAlgorithm::GetAssociatedTwoDHit(const CaloHit *const pCaloHit3D, const CaloHitList *const pCaloHitList2D,
     CaloHitList &associatedHits, HitUsedMap &usedHits2D, const HitType &hitType) const
 {
     const CartesianVector posThreeD = pCaloHit3D->GetPositionVector();
@@ -138,14 +137,14 @@ void CreateTwoDClustersFromThreeDAlgorithm::GetAssociatedTwoDHit(const CaloHit *
     if (hitType == TPC_VIEW_V)
         wirePos = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(posThreeD.GetY(), posThreeD.GetZ());
     if (hitType == TPC_VIEW_W)
-        wirePos = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoW(posThreeD.GetY(), posThreeD.GetZ()); 
+        wirePos = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoW(posThreeD.GetY(), posThreeD.GetZ());
 
     for (const CaloHit *const pCaloHit2D : *pCaloHitList2D)
     {
         if (usedHits2D.at(pCaloHit2D) == true)
             continue;
 
-        if (!PandoraContentApi::IsAvailable(*this,pCaloHit2D))
+        if (!PandoraContentApi::IsAvailable(*this, pCaloHit2D))
             continue;
 
         const CartesianVector posTwoD = pCaloHit2D->GetPositionVector();

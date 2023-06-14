@@ -11,11 +11,11 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "SlicingThreeDAlgorithm.h"
 #include "LArSlice3D.h"
+#include "SlicingThreeDAlgorithm.h"
 
-#include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 
 #include <unordered_map>
 
@@ -53,8 +53,7 @@ private:
      *  @param  caloHitListNames the hit type to calo hit list name map
      *  @param  sliceList the slice list to receive the single new slice
      */
-    void CopyAllHitsToSingleSlice(const pandora::Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
-        Slice3DList &sliceList) const;
+    void CopyAllHitsToSingleSlice(const pandora::Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames, Slice3DList &sliceList) const;
 
     typedef std::unordered_map<const pandora::Cluster *, const pandora::ParticleFlowObject *> ClusterToPfoMap;
 
@@ -222,8 +221,8 @@ private:
      *  @param  clusterToSliceIndexMap the mapping from 3D clusters to index in the slice list
      *  @param  sliceList the list containing slices to be populated with 2D hits
      */
-    void AssignRemainingHitsToSlices(const pandora::ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
-        Slice3DList &sliceList) const;
+    void AssignRemainingHitsToSlices(
+        const pandora::ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap, Slice3DList &sliceList) const;
 
     typedef KDTreeLinkerAlgo<const pandora::CartesianVector *, 2> PointKDTree2D;
     typedef KDTreeNodeInfoT<const pandora::CartesianVector *, 2> PointKDNode2D;

@@ -24,7 +24,7 @@ public:
      *  @brief  Default constructor
      */
     MergeClearTracksThreeDAlgorithm();
-    
+
     pandora::StatusCode Run();
 
 private:
@@ -32,7 +32,8 @@ private:
     typedef std::map<const pandora::Cluster *const, const pandora::Cluster *> ClusterMergeMap;
 
     bool FindMerges(const pandora::ClusterList *const pClusterList) const;
-    void CanMergeClusters(const pandora::Cluster *const pLargeCluster, const pandora::Cluster *const pSmallCluster, ClusterMergeMap &mergeCandidates, ClusterFloatMap &mergeDistances) const;
+    void CanMergeClusters(const pandora::Cluster *const pLargeCluster, const pandora::Cluster *const pSmallCluster,
+        ClusterMergeMap &mergeCandidates, ClusterFloatMap &mergeDistances) const;
     void MergeClusters(const pandora::Cluster *const pLargeCluster, const pandora::Cluster *const pSmallCluster) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

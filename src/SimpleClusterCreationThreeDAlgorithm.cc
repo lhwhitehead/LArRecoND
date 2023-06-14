@@ -102,7 +102,7 @@ StatusCode SimpleClusterCreationThreeDAlgorithm::CreateClusters(const CaloHitLis
             vetoList.insert(pAssociatedCaloHit);
         }
     }
- 
+
     // 3D clusters
     const ClusterList *pClusterList3D{nullptr};
     std::string tempClusterListName;

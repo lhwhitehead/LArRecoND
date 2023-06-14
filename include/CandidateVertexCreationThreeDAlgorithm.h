@@ -114,12 +114,12 @@ private:
 
     typedef std::unordered_map<const pandora::Cluster *, pandora::CartesianPointVector> ClusterToSpacepointsMap;
 
-    std::string m_inputClusterListName;            ///< The list of cluster list name
-    std::string m_inputVertexListName;             ///< The list name for existing candidate vertices
-    std::string m_outputVertexListName;            ///< The name under which to save the output vertex list
-    bool m_replaceCurrentVertexList;               ///< Whether to replace the current vertex list with the output list
+    std::string m_inputClusterListName; ///< The list of cluster list name
+    std::string m_inputVertexListName;  ///< The list name for existing candidate vertices
+    std::string m_outputVertexListName; ///< The name under which to save the output vertex list
+    bool m_replaceCurrentVertexList;    ///< Whether to replace the current vertex list with the output list
 
-    unsigned int m_slidingFitWindow;               ///< The layer window for the sliding linear fits
+    unsigned int m_slidingFitWindow;                 ///< The layer window for the sliding linear fits
     ThreeDSlidingFitResultMap m_slidingFitResultMap; ///< The sliding fit result map
 
     unsigned int m_minClusterCaloHits; ///< The min number of hits in base cluster selection method
@@ -131,7 +131,7 @@ private:
 
     bool m_enableCrossingCandidates;          ///< Whether to create crossing vertex candidates
     unsigned int m_nMaxCrossingCandidates;    ///< The max number of crossing candidates to create
-    float m_maxCrossingDiscrepancy;          ///< The max cluster endpoint discrepancy
+    float m_maxCrossingDiscrepancy;           ///< The max cluster endpoint discrepancy
     unsigned int m_extrapolationNSteps;       ///< Number of extrapolation steps, at each end of cluster, of specified size
     float m_extrapolationStepSize;            ///< The extrapolation step size in cm
     float m_maxCrossingSeparationSquared;     ///< The separation (squared) between spacepoints below which a crossing can be identified

@@ -12,7 +12,6 @@
 #include "Pandora/AlgorithmTool.h"
 #include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
 
-
 namespace lar_content
 {
 
@@ -28,7 +27,6 @@ class EventSlicingThreeDTool;
 class SlicingThreeDAlgorithm : public SlicingAlgorithm
 {
 public:
-
     /**
      *  @brief  Default constructor
      */
@@ -38,8 +36,8 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    EventSlicingThreeDTool *m_pEventSlicingTool;  ///< The address of the event slicing tool
-    std::string m_slicingListDeletionAlgorithm; ///< The name of the slicing list deletion algorithm
+    EventSlicingThreeDTool *m_pEventSlicingTool; ///< The address of the event slicing tool
+    std::string m_slicingListDeletionAlgorithm;  ///< The name of the slicing list deletion algorithm
 
     HitTypeToNameMap m_caloHitListNames; ///< The hit type to calo hit list name map
     HitTypeToNameMap m_clusterListNames; ///< The hit type to cluster list name map

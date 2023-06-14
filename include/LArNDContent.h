@@ -25,7 +25,6 @@ public:
      *  @param  pandora the pandora instance with which to register content
      */
     static pandora::StatusCode RegisterAlgorithms(const pandora::Pandora &pandora);
-
 };
 
 #endif // #ifndef LAR_CONTENT_ND_H

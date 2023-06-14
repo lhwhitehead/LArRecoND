@@ -151,7 +151,7 @@ void PreProcessingThreeDAlgorithm::ProcessCaloHits()
     filteredInputList.insert(filteredInputList.end(), filteredCaloHitListW.begin(), filteredCaloHitListW.end());
 
     std::cout << "Hit list sizes: " << filteredCaloHitListU.size() << ", " << filteredCaloHitListV.size() << ", "
-                                    << filteredCaloHitListW.size() << ", " << selectedCaloHitList3D.size() << std::endl;
+              << filteredCaloHitListW.size() << ", " << selectedCaloHitList3D.size() << std::endl;
 
     if (!filteredInputList.empty() && !m_filteredCaloHitListName.empty())
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, filteredInputList, m_filteredCaloHitListName));

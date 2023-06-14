@@ -171,7 +171,8 @@ void EventSlicingThreeDTool::GetThreeDClusters(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingThreeDTool::GetClusterSliceList(const ClusterList &trackClusters3D, const ClusterList &showerClusters3D, ClusterSliceList &clusterSliceList) const
+void EventSlicingThreeDTool::GetClusterSliceList(
+    const ClusterList &trackClusters3D, const ClusterList &showerClusters3D, ClusterSliceList &clusterSliceList) const
 {
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -446,8 +447,8 @@ void EventSlicingThreeDTool::CreateSlices(const ClusterSliceList &clusterSliceLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingThreeDTool::CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap, const ClusterToPfoMap &clusterToPfoMap,
-    Slice3DList &sliceList, ClusterSet &assignedClusters) const
+void EventSlicingThreeDTool::CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap,
+    const ClusterToPfoMap &clusterToPfoMap, Slice3DList &sliceList, ClusterSet &assignedClusters) const
 {
     ClusterList clusterList;
     for (const auto &mapEntry : clusterToSliceIndexMap)
@@ -597,8 +598,8 @@ void EventSlicingThreeDTool::AssignRemainingHitsToSlices(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingThreeDTool::GetKDTreeEntries2D(
-    const Slice3DList &sliceList, PointList &pointsU, PointList &pointsV, PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
+void EventSlicingThreeDTool::GetKDTreeEntries2D(const Slice3DList &sliceList, PointList &pointsU, PointList &pointsV, PointList &pointsW,
+    PointToSliceIndexMap &pointToSliceIndexMap) const
 {
     unsigned int sliceIndex(0);
 
@@ -631,8 +632,8 @@ void EventSlicingThreeDTool::GetKDTreeEntries2D(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingThreeDTool::GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointList &pointsU, PointList &pointsV,
-    PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
+void EventSlicingThreeDTool::GetKDTreeEntries3D(const ClusterToSliceIndexMap &clusterToSliceIndexMap, PointList &pointsU,
+    PointList &pointsV, PointList &pointsW, PointToSliceIndexMap &pointToSliceIndexMap) const
 {
     ClusterList clusterList;
     for (const auto &mapEntry : clusterToSliceIndexMap)

@@ -135,9 +135,9 @@ void CandidateVertexCreationThreeDAlgorithm::SelectClusters(ClusterVector &clust
 
         if (pCluster->GetParticleId() == E_MINUS && m_reducedCandidates)
         {
-            selectionCutFactor = (m_selectionCutFactorMax + 1.f) * 0.5f +
-                                 (m_selectionCutFactorMax - 1.f) * 0.5f *
-                                     std::tanh(static_cast<float>(nClustersPassingMaxCuts) - m_nClustersPassingMaxCutsPar);
+            selectionCutFactor =
+                (m_selectionCutFactorMax + 1.f) * 0.5f +
+                (m_selectionCutFactorMax - 1.f) * 0.5f * std::tanh(static_cast<float>(nClustersPassingMaxCuts) - m_nClustersPassingMaxCutsPar);
         }
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits * selectionCutFactor)
@@ -169,12 +169,12 @@ void CandidateVertexCreationThreeDAlgorithm::CreateEndpointVertices(const Cluste
 
         const CartesianVector minLayerPosition(fitResult.GetGlobalMinLayerPosition());
         const CartesianVector maxLayerPosition(fitResult.GetGlobalMaxLayerPosition());
-    
+
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = minLayerPosition;
         parameters.m_vertexLabel = VERTEX_INTERACTION;
         parameters.m_vertexType = VERTEX_3D;
-    
+
         const Vertex *pMinVertex(nullptr);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pMinVertex));
 
@@ -224,7 +224,7 @@ void CandidateVertexCreationThreeDAlgorithm::FindCrossingPoints(const ClusterVec
 void CandidateVertexCreationThreeDAlgorithm::GetSpacepoints(const Cluster *const pCluster, CartesianPointVector &spacepoints) const
 {
     LArClusterHelper::GetCoordinateVector(pCluster, spacepoints);
-/*
+    /*
     const ThreeDSlidingFitResult &fitResult(this->GetCachedSlidingFitResult(pCluster));
     const float minLayerRL(fitResult.GetL(fitResult.GetMinLayer()));
     const float maxLayerRL(fitResult.GetL(fitResult.GetMaxLayer()));
@@ -309,7 +309,6 @@ void CandidateVertexCreationThreeDAlgorithm::CreateCrossingVertices(const Cartes
         const Vertex *pVertex(nullptr);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
         ++nCrossingCandidates;
-    
     }
 }
 
@@ -409,8 +408,8 @@ StatusCode CandidateVertexCreationThreeDAlgorithm::ReadSettings(const TiXmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NMaxCrossingCandidates", m_nMaxCrossingCandidates));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MaxCrossingDiscrepancy", m_maxCrossingDiscrepancy));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxCrossingDiscrepancy", m_maxCrossingDiscrepancy));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ExtrapolationNSteps", m_extrapolationNSteps));

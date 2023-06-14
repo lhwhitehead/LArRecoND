@@ -31,8 +31,8 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string m_inputClusterListName;   ///< Name of the cluster list
-    std::string m_inputCaloHitListName;   ///< Name of the calo hit list
+    std::string m_inputClusterListName; ///< Name of the cluster list
+    std::string m_inputCaloHitListName; ///< Name of the calo hit list
 };
 
 } // namespace lar_content

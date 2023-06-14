@@ -52,20 +52,20 @@ StatusCode NDValidationAlgorithm::Run()
     const PfoList *pPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
 
-    std::map<const MCParticle*, MCParticleList> trueNeutrinoMap;
+    std::map<const MCParticle *, MCParticleList> trueNeutrinoMap;
 
     for (const MCParticle *pMCParticle : *pMCParticleList)
     {
         if (LArMCParticleHelper::IsNeutrino(pMCParticle) && !LArMCParticleHelper::GetHierarchyTier(pMCParticle))
         {
             MCParticleList descendentsList;
-            LArMCParticleHelper::GetAllDescendentMCParticles(pMCParticle,descendentsList);
+            LArMCParticleHelper::GetAllDescendentMCParticles(pMCParticle, descendentsList);
             trueNeutrinoMap[pMCParticle] = descendentsList;
             std::cout << "Found true neutrino " << pMCParticle << " with " << trueNeutrinoMap[pMCParticle].size() << " primaries" << std::endl;
         }
     }
 
-    std::map<const ParticleFlowObject*, PfoList> recoNeutrinoMap;
+    std::map<const ParticleFlowObject *, PfoList> recoNeutrinoMap;
     for (const ParticleFlowObject *pPfo : *pPfoList)
     {
         if (LArPfoHelper::IsNeutrino(pPfo))
@@ -75,7 +75,6 @@ StatusCode NDValidationAlgorithm::Run()
             recoNeutrinoMap[pPfo] = descendentsList;
         }
     }
-
 
     LArHierarchyHelper::FoldingParameters foldParameters;
     if (m_foldToPrimaries)
@@ -96,7 +95,7 @@ StatusCode NDValidationAlgorithm::Run()
             LArHierarchyHelper::MatchInfo matchInfo;
             LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
             //matchInfo.Print(mcHierarchy);
-    
+
             if (m_validateEvent)
                 this->EventValidation(matchInfo);
             else if (m_validateMC)

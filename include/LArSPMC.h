@@ -10,9 +10,9 @@
 
 #include "LArSP.h"
 
-#include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
+#include <TROOT.h>
 
 // Header file for the classes stored in the TTree if any.
 #include "vector"
@@ -23,74 +23,73 @@ namespace lar_nd_reco
 class LArSPMC : public LArSP
 {
 public:
-
     // Hit level truth information
-    std::vector<std::vector<int> > *hit_segmentID;
-    std::vector<std::vector<int> > *hit_segmentIndex;
-    std::vector<std::vector<int> > *hit_particleID;
-    std::vector<std::vector<int> > *hit_particleIndex;
-    std::vector<std::vector<int> > *hit_interactionIndex;
-    std::vector<std::vector<int> > *hit_pdg;
-    std::vector<std::vector<float> > *hit_packetFrac;
-    TBranch        *b_hit_segmentID;
-    TBranch        *b_hit_segmentIndex;
-    TBranch        *b_hit_particleID;
-    TBranch        *b_hit_particleIndex;
-    TBranch        *b_hit_interactionIndex;
-    TBranch        *b_hit_pdg;
-    TBranch        *b_hit_packetFrac;
+    std::vector<std::vector<int>> *hit_segmentID;
+    std::vector<std::vector<int>> *hit_segmentIndex;
+    std::vector<std::vector<int>> *hit_particleID;
+    std::vector<std::vector<int>> *hit_particleIndex;
+    std::vector<std::vector<int>> *hit_interactionIndex;
+    std::vector<std::vector<int>> *hit_pdg;
+    std::vector<std::vector<float>> *hit_packetFrac;
+    TBranch *b_hit_segmentID;
+    TBranch *b_hit_segmentIndex;
+    TBranch *b_hit_particleID;
+    TBranch *b_hit_particleIndex;
+    TBranch *b_hit_interactionIndex;
+    TBranch *b_hit_pdg;
+    TBranch *b_hit_packetFrac;
 
     // MC Particle information
-    std::vector<float>   *mcp_energy;
-    std::vector<int>     *mcp_pdg;
-    std::vector<int>     *mcp_nuid;
-    std::vector<int>     *mcp_id;
-    std::vector<int>     *mcp_mother;
-    std::vector<float>   *mcp_px;
-    std::vector<float>   *mcp_py;
-    std::vector<float>   *mcp_pz;
-    std::vector<float>   *mcp_startx;
-    std::vector<float>   *mcp_starty;
-    std::vector<float>   *mcp_startz;
-    std::vector<float>   *mcp_endx;
-    std::vector<float>   *mcp_endy;
-    std::vector<float>   *mcp_endz;
-    TBranch        *b_mcp_energy;
-    TBranch        *b_mcp_pdg;
-    TBranch        *b_mcp_nuid;
-    TBranch        *b_mcp_id;
-    TBranch        *b_mcp_mother;
-    TBranch        *b_mcp_px;
-    TBranch        *b_mcp_py;
-    TBranch        *b_mcp_pz;
-    TBranch        *b_mcp_startx;
-    TBranch        *b_mcp_starty;
-    TBranch        *b_mcp_startz;
-    TBranch        *b_mcp_endx;
-    TBranch        *b_mcp_endy;
-    TBranch        *b_mcp_endz;
+    std::vector<float> *mcp_energy;
+    std::vector<int> *mcp_pdg;
+    std::vector<int> *mcp_nuid;
+    std::vector<int> *mcp_id;
+    std::vector<int> *mcp_mother;
+    std::vector<float> *mcp_px;
+    std::vector<float> *mcp_py;
+    std::vector<float> *mcp_pz;
+    std::vector<float> *mcp_startx;
+    std::vector<float> *mcp_starty;
+    std::vector<float> *mcp_startz;
+    std::vector<float> *mcp_endx;
+    std::vector<float> *mcp_endy;
+    std::vector<float> *mcp_endz;
+    TBranch *b_mcp_energy;
+    TBranch *b_mcp_pdg;
+    TBranch *b_mcp_nuid;
+    TBranch *b_mcp_id;
+    TBranch *b_mcp_mother;
+    TBranch *b_mcp_px;
+    TBranch *b_mcp_py;
+    TBranch *b_mcp_pz;
+    TBranch *b_mcp_startx;
+    TBranch *b_mcp_starty;
+    TBranch *b_mcp_startz;
+    TBranch *b_mcp_endx;
+    TBranch *b_mcp_endy;
+    TBranch *b_mcp_endz;
 
     // Neutrino information
-    std::vector<int>     *nuID;
-    std::vector<float>   *nue;
-    std::vector<int>     *nuPDG;
-    std::vector<float>   *nupx;
-    std::vector<float>   *nupy;
-    std::vector<float>   *nupz;
-    std::vector<float>   *nuvtxx;
-    std::vector<float>   *nuvtxy;
-    std::vector<float>   *nuvtxz;
-    TBranch        *b_nuID;
-    TBranch        *b_nue;
-    TBranch        *b_nuPDG;
-    TBranch        *b_nupx;
-    TBranch        *b_nupy;
-    TBranch        *b_nupz;
-    TBranch        *b_nuvtxx;
-    TBranch        *b_nuvtxy;
-    TBranch        *b_nuvtxz;
+    std::vector<int> *nuID;
+    std::vector<float> *nue;
+    std::vector<int> *nuPDG;
+    std::vector<float> *nupx;
+    std::vector<float> *nupy;
+    std::vector<float> *nupz;
+    std::vector<float> *nuvtxx;
+    std::vector<float> *nuvtxy;
+    std::vector<float> *nuvtxz;
+    TBranch *b_nuID;
+    TBranch *b_nue;
+    TBranch *b_nuPDG;
+    TBranch *b_nupx;
+    TBranch *b_nupy;
+    TBranch *b_nupz;
+    TBranch *b_nuvtxx;
+    TBranch *b_nuvtxy;
+    TBranch *b_nuvtxz;
 
-    LArSPMC(TTree *tree=0);
+    LArSPMC(TTree *tree = 0);
     virtual ~LArSPMC();
     virtual void InitMC(TTree *tree);
 };
@@ -117,7 +116,7 @@ void LArSPMC::InitMC(TTree *tree)
     // code, but the routine can be extended by the user if needed.
     // Init() will be called many times when running on PROOF
     // (once per file to be processed).
-    
+
     // Set object pointer
     hit_segmentID = nullptr;
     hit_segmentIndex = nullptr;
@@ -158,7 +157,7 @@ void LArSPMC::InitMC(TTree *tree)
     fChain = tree;
     fCurrent = -1;
     fChain->SetMakeClass(1);
-    
+
     fChain->SetBranchAddress("hit_segmentID", &hit_segmentID, &b_hit_segmentID);
     fChain->SetBranchAddress("hit_segmentIndex", &hit_segmentIndex, &b_hit_segmentIndex);
     fChain->SetBranchAddress("hit_particleID", &hit_particleID, &b_hit_particleID);

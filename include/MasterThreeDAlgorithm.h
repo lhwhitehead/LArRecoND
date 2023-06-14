@@ -34,7 +34,6 @@ public:
     MasterThreeDAlgorithm() = default;
 
 protected:
-
     pandora::StatusCode Run();
     /**
      *  @brief  Run the event slicing procedures, dividing available hits up into distinct 3D regions

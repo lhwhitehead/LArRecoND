@@ -66,8 +66,8 @@ private:
 
     float m_clusteringWindowSquared; ///< Maximum distance (squared) for two hits to be joined
 
-    std::string m_inputCaloHitListName3D;     ///< Name of the input 3D calo hit list
-    std::string m_outputClusterListName3D;    ///< Names of the output 3D cluster list
+    std::string m_inputCaloHitListName3D;  ///< Name of the input 3D calo hit list
+    std::string m_outputClusterListName3D; ///< Names of the output 3D cluster list
 };
 
 } // namespace lar_content

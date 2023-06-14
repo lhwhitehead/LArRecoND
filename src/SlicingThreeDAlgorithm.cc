@@ -10,8 +10,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "SlicingThreeDAlgorithm.h"
 #include "EventSlicingThreeDTool.h"
+#include "SlicingThreeDAlgorithm.h"
 
 using namespace pandora;
 

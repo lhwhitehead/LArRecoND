@@ -35,7 +35,7 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputCaloHitList3DName, pCaloHits3D));
 
     CaloHitList availableHits;
-    std::map<const CaloHit*, float> availableHitUPos, availableHitVPos, availableHitWPos;
+    std::map<const CaloHit *, float> availableHitUPos, availableHitVPos, availableHitWPos;
     for (const CaloHit *pCaloHit : (*pCaloHits3D))
     {
         if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
@@ -49,8 +49,8 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
     }
 
     // Maps to keep track of which 3D hit matches to a 2D hit in a given pfo
-    std::map<const ParticleFlowObject*, std::string> pfoToClusterListName;
-    std::map<const CaloHit*, const ParticleFlowObject*> availableHitToPfoU, availableHitToPfoV, availableHitToPfoW;
+    std::map<const ParticleFlowObject *, std::string> pfoToClusterListName;
+    std::map<const CaloHit *, const ParticleFlowObject *> availableHitToPfoU, availableHitToPfoV, availableHitToPfoW;
     for (unsigned int i = 0; i < m_inputPfoListNames.size(); ++i)
     {
         const std::string pfoListName(m_inputPfoListNames.at(i));
@@ -82,8 +82,8 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
                         continue;
                     if (std::fabs(availableHitUPos.at(pHit3D) - pos2D.GetZ()) > std::numeric_limits<float>::epsilon())
                         continue;
-                   availableHitToPfoU[pHit3D] = pPfo;
-                   break;
+                    availableHitToPfoU[pHit3D] = pPfo;
+                    break;
                 }
 
                 for (const CaloHit *const pHit2D : theseCaloHitsV)
@@ -93,8 +93,8 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
                         continue;
                     if (std::fabs(availableHitVPos.at(pHit3D) - pos2D.GetZ()) > std::numeric_limits<float>::epsilon())
                         continue;
-                   availableHitToPfoV[pHit3D] = pPfo;
-                   break;
+                    availableHitToPfoV[pHit3D] = pPfo;
+                    break;
                 }
 
                 for (const CaloHit *const pHit2D : theseCaloHitsW)
@@ -104,8 +104,8 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
                         continue;
                     if (std::fabs(availableHitWPos.at(pHit3D) - pos2D.GetZ()) > std::numeric_limits<float>::epsilon())
                         continue;
-                   availableHitToPfoW[pHit3D] = pPfo;
-                   break;
+                    availableHitToPfoW[pHit3D] = pPfo;
+                    break;
                 }
             }
         }
@@ -125,7 +125,7 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
             if (std::find(matchedPfos.begin(), matchedPfos.end(), availableHitToPfoU.at(pCaloHit3D)) == matchedPfos.end())
                 matchedPfos.emplace_back(availableHitToPfoU.at(pCaloHit3D));
         }
-           
+
         if (availableHitToPfoV.count(pCaloHit3D))
         {
             if (std::find(matchedPfos.begin(), matchedPfos.end(), availableHitToPfoV.at(pCaloHit3D)) == matchedPfos.end())
@@ -150,7 +150,7 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
             threeDHitsMatchedToMultiPfos.emplace_back(pCaloHit3D);
     }
 
-    std::map<const ParticleFlowObject*, CaloHitList> pfoToHits;
+    std::map<const ParticleFlowObject *, CaloHitList> pfoToHits;
 
     // Deal with the unambiguous 3D hits first
     for (const CaloHit *const pCaloHit3D : threeDHitsMatchedToOnePfo)
@@ -159,7 +159,6 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
         if (!pfoToHits.count(pPfo))
             pfoToHits[pPfo] = CaloHitList();
         pfoToHits[pPfo].emplace_back(pCaloHit3D);
-
     }
 
     // If a 3D hit has 2D hits in more than one pfo we have a decision to make
@@ -200,10 +199,10 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
                 }
             }
         }
-        
+
         // If no best index was found, use the pfo with the most 2D hits
         if (bestIndex < 0)
-            bestIndex = biggestPfoIndex;        
+            bestIndex = biggestPfoIndex;
 
         if (!pfoToHits.count(pfoList[bestIndex]))
             pfoToHits[pfoList[bestIndex]] = CaloHitList();
@@ -212,7 +211,7 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
 
     // Assign the hits
     for (auto const &pfoPair : pfoToHits)
-        AddHitsToPfo(pfoPair.first,pfoPair.second,pfoToClusterListName.at(pfoPair.first));
+        AddHitsToPfo(pfoPair.first, pfoPair.second, pfoToClusterListName.at(pfoPair.first));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -222,7 +221,7 @@ pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::Run()
 void PfoThreeDHitAssignmentAlgorithm::AddHitsToPfo(const ParticleFlowObject *pPfo, const CaloHitList &hits, const std::string listName) const
 {
     ClusterList clusters3D;
-    LArPfoHelper::GetThreeDClusterList(pPfo,clusters3D);
+    LArPfoHelper::GetThreeDClusterList(pPfo, clusters3D);
     const unsigned int nClusters(clusters3D.size());
 
     if (0 == nClusters)
@@ -251,20 +250,23 @@ void PfoThreeDHitAssignmentAlgorithm::AddHitsToPfo(const ParticleFlowObject *pPf
     }
     else
         throw StatusCodeException(STATUS_CODE_FAILURE);
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 pandora::StatusCode PfoThreeDHitAssignmentAlgorithm::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitList3DName", m_inputCaloHitList3DName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "OutputClusterListNames", m_outputClusterListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitList3DName", m_inputCaloHitList3DName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "OutputClusterListNames", m_outputClusterListNames));
 
     if (m_inputPfoListNames.size() != m_outputClusterListNames.size())
     {
-        std::cout << "LArPfoThreeDHitAssignment: number of input pfo list names must be the same as the number of output cluster list names" << std::endl;
+        std::cout << "LArPfoThreeDHitAssignment: number of input pfo list names must be the same as the number of output cluster list names"
+                  << std::endl;
         return STATUS_CODE_FAILURE;
     }
 

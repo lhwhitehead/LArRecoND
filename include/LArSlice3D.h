@@ -18,7 +18,7 @@ namespace lar_content
 /**
  *  @brief  Slice class
  */
-class Slice3D : Slice 
+class Slice3D : Slice
 {
 public:
     pandora::CaloHitList m_caloHitListU;  ///< The TPC_VIEW_U calo hit list
@@ -29,6 +29,6 @@ public:
 
 typedef std::vector<Slice3D> Slice3DList;
 
-}
+} // namespace lar_content
 
 #endif // #ifndef LAR_SLICE_3D_H

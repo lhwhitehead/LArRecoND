@@ -32,22 +32,22 @@
 #include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
 #include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
 
+#include "LArNDContent.h"
 #include "LArNDGeomSimple.h"
 #include "LArRay.h"
 #include "PandoraInterface.h"
-#include "LArNDContent.h"
 
 #ifdef MONITORING
 #include "TApplication.h"
 #endif
 
+#include <algorithm>
 #include <getopt.h>
 #include <iostream>
 #include <memory>
 #include <random>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 using namespace pandora;
 using namespace lar_nd_reco;
@@ -242,10 +242,8 @@ void MakePandoraTPC(const pandora::Pandora *const pPrimaryPandora, const Paramet
 
         geom.AddTPC(centreX - dx, centreX + dx, centreY - dy, centreY + dy, centreZ - dz, centreZ + dz, tpcNumber);
 
-        std::cout << "Creating TPC: " << centreX - dx << ", " << centreX + dx << ", "
-                                      << centreY - dy << ", " << centreY + dy << ", "
-                                      << centreZ - dz << ", " << centreZ + dz << std::endl;
-
+        std::cout << "Creating TPC: " << centreX - dx << ", " << centreX + dx << ", " << centreY - dy << ", " << centreY + dy << ", "
+                  << centreZ - dz << ", " << centreZ + dz << std::endl;
     }
     catch (const pandora::StatusCodeException &)
     {
@@ -345,7 +343,7 @@ void ProcessEDepSimEvents(const Parameters &parameters, const Pandora *const pPr
         for (TG4HitSegmentDetectors::iterator detector = pEDepSimEvent->SegmentDetectors.begin();
              detector != pEDepSimEvent->SegmentDetectors.end(); ++detector)
         {
-                        if (detector->first != parameters.m_sensitiveDetName)
+            if (detector->first != parameters.m_sensitiveDetName)
             //if (detector->first.find(parameters.m_sensitiveDetName) == std::string::npos)
             {
                 std::cout << "Skipping sensitive detector " << detector->first << "; expecting " << parameters.m_sensitiveDetName << std::endl;
@@ -524,7 +522,7 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
         larsp = new LArSPMC(ndsptree);
     else
         larsp = new LArSP(ndsptree);
-    
+
     // Factory for creating LArCaloHits
     lar_content::LArCaloHitFactory m_larCaloHitFactory;
 
@@ -558,7 +556,7 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
         MCParticleEnergyMap MCEnergyMap;
         if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
         {
-            LArSPMC *larspmc = dynamic_cast<LArSPMC*>(larsp);
+            LArSPMC *larspmc = dynamic_cast<LArSPMC *>(larsp);
 
             // Create MCParticles from Geant4 trajectories
             for (size_t imcp = 0; imcp < larspmc->mcp_id->size(); ++imcp)
@@ -608,24 +606,24 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
             // Set calo hit to MCParticle relation using trackID
             if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
             {
-                LArSPMC *larspmc = dynamic_cast<LArSPMC*>(larsp);
+                LArSPMC *larspmc = dynamic_cast<LArSPMC *>(larsp);
                 const std::vector<float> mcContribs = (*larspmc->hit_packetFrac)[isp];
-                const int biggestContribIndex = std::distance(mcContribs.begin(),std::max_element(mcContribs.begin(),mcContribs.end()));
+                const int biggestContribIndex = std::distance(mcContribs.begin(), std::max_element(mcContribs.begin(), mcContribs.end()));
                 trackID = (*larspmc->hit_particleID)[isp][biggestContribIndex];
                 // Due to the merging of hits, the contributions can sometimes add up to more than one. Normalise first.
-                const float sum = std::accumulate(mcContribs.begin(),mcContribs.end(),0.f);
+                const float sum = std::accumulate(mcContribs.begin(), mcContribs.end(), 0.f);
                 energyFrac = mcContribs[biggestContribIndex] / sum;
                 // Since there are some negative contributions, energyFrac can still be > 0 here.
                 if (energyFrac >= 1.f + std::numeric_limits<float>::epsilon())
                     energyFrac = 1.f;
-                
+
                 // Find the mc particle corresponding to this
-//                if (std::find(larspmc->mcp_id->begin(),larspmc->mcp_id->end(),trackID) != larspmc->mcp_id->end())
-//                {
-//                    const int mcIndex = std::distance(larspmc->mcp_id->begin(),std::find(larspmc->mcp_id->begin(),larspmc->mcp_id->end(),trackID));
-//                    std::cout << voxelPos.GetX() << " " << voxelPos.GetY() << " " << voxelPos.GetZ() << " " << energyFrac << " " << trackID << " " << (*larspmc->mcp_pdg)[mcIndex] << std::endl;
-//                }
-                if (std::find(larspmc->mcp_id->begin(),larspmc->mcp_id->end(),trackID) == larspmc->mcp_id->end())
+                //                if (std::find(larspmc->mcp_id->begin(),larspmc->mcp_id->end(),trackID) != larspmc->mcp_id->end())
+                //                {
+                //                    const int mcIndex = std::distance(larspmc->mcp_id->begin(),std::find(larspmc->mcp_id->begin(),larspmc->mcp_id->end(),trackID));
+                //                    std::cout << voxelPos.GetX() << " " << voxelPos.GetY() << " " << voxelPos.GetZ() << " " << energyFrac << " " << trackID << " " << (*larspmc->mcp_pdg)[mcIndex] << std::endl;
+                //                }
+                if (std::find(larspmc->mcp_id->begin(), larspmc->mcp_id->end(), trackID) == larspmc->mcp_id->end())
                     std::cout << "Problem? Could not find MC particle with ID " << trackID << std::endl;
             }
 
@@ -635,7 +633,8 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
                     pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitParameters, m_larCaloHitFactory));
 
                 if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
-                    PandoraApi::SetCaloHitToMCParticleRelationship(*pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
+                    PandoraApi::SetCaloHitToMCParticleRelationship(
+                        *pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
             }
 
             if (parameters.m_useLArTPC)
@@ -654,7 +653,8 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
                 PANDORA_THROW_RESULT_IF(
                     pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitPars_UView, m_larCaloHitFactory));
                 if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
-                    PandoraApi::SetCaloHitToMCParticleRelationship(*pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
+                    PandoraApi::SetCaloHitToMCParticleRelationship(
+                        *pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
 
                 lar_content::LArCaloHitParameters caloHitPars_VView(caloHitParameters);
                 caloHitPars_VView.m_hitType = pandora::TPC_VIEW_V;
@@ -664,7 +664,8 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
                 PANDORA_THROW_RESULT_IF(
                     pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitPars_VView, m_larCaloHitFactory));
                 if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
-                    PandoraApi::SetCaloHitToMCParticleRelationship(*pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
+                    PandoraApi::SetCaloHitToMCParticleRelationship(
+                        *pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
 
                 lar_content::LArCaloHitParameters caloHitPars_WView(caloHitParameters);
                 caloHitPars_WView.m_hitType = pandora::TPC_VIEW_W;
@@ -675,7 +676,8 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
                 PANDORA_THROW_RESULT_IF(
                     pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitPars_WView, m_larCaloHitFactory));
                 if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
-                    PandoraApi::SetCaloHitToMCParticleRelationship(*pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
+                    PandoraApi::SetCaloHitToMCParticleRelationship(
+                        *pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
             }
 
         } // end space point loop
@@ -988,8 +990,8 @@ void CreateSPMCParticles(const LArSPMC &larspmc, const pandora::Pandora *const p
     {
         const int neutrinoID = nuidoffset + (*larspmc.nuID)[i];
         const int neutrinoPDG = (*larspmc.nuPDG)[i];
-//        const std::string reaction = GetNuanceReaction((*larsed.ccnc)[i], (*larsed.mode)[i]);
-//        const int nuanceCode = GetNuanceCode(reaction);
+        //        const std::string reaction = GetNuanceReaction((*larsed.ccnc)[i], (*larsed.mode)[i]);
+        //        const int nuanceCode = GetNuanceCode(reaction);
         const int nuanceCode = 1001; // We don't have this information available yet. Assume CCQE?
 
         const float nuVtxX = (*larspmc.nuvtxx)[i] * parameters.m_lengthScale;
@@ -1042,15 +1044,15 @@ void CreateSPMCParticles(const LArSPMC &larspmc, const pandora::Pandora *const p
         // Neutrino info
         const int nuid = (*larspmc.mcp_nuid)[i];
         const int neutrinoID = nuid + nuidoffset;
-//        const std::string reaction = GetNuanceReaction((*larspmc.ccnc)[nuid], (*larspmc.mode)[nuid]);
-//        mcParticleParameters.m_nuanceCode = GetNuanceCode(reaction);
+        //        const std::string reaction = GetNuanceReaction((*larspmc.ccnc)[nuid], (*larspmc.mode)[nuid]);
+        //        mcParticleParameters.m_nuanceCode = GetNuanceCode(reaction);
         mcParticleParameters.m_nuanceCode = 1001; // Dummy value again set to CCQE
 
         // Set unique parent integer address using trackID
         const int trackID = (*larspmc.mcp_id)[i];
         mcParticleParameters.m_pParentAddress = (void *)((intptr_t)trackID);
 
-//        std::cout << "MCParticle " << trackID << " linked to neutrino " << neutrinoID << std::endl;
+        //        std::cout << "MCParticle " << trackID << " linked to neutrino " << neutrinoID << std::endl;
         // Start and end points in cm
         const float startx = (*larspmc.mcp_startx)[i] * parameters.m_lengthScale;
         const float starty = (*larspmc.mcp_starty)[i] * parameters.m_lengthScale;
@@ -1084,7 +1086,6 @@ void CreateSPMCParticles(const LArSPMC &larspmc, const pandora::Pandora *const p
         }
     }
     std::cout << "Made " << larspmc.mcp_id->size() << " MC particles" << std::endl;
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1507,7 +1508,7 @@ LArVoxelProjectionList MergeSameProjections(const LArVoxelProjectionList &hits)
         {
             if (areUsed.at(vp2))
                 continue;
- 
+
             const LArVoxelProjection &voxProj2 = hits.at(vp2);
             if ((voxProj1.m_wire != voxProj2.m_wire) || (voxProj1.m_drift != voxProj2.m_drift))
                 continue;
@@ -1602,19 +1603,19 @@ void MakeCaloHitsFromVoxels(const LArVoxelList &voxels, const MCParticleEnergyMa
         for (unsigned int v = 0; v < voxels.size(); ++v)
         {
             const LArVoxel &voxel = voxels.at(v);
-            
+
             const pandora::CartesianVector voxelPos = voxel.m_voxelPosVect;
             const float uPos(pPrimaryPandora->GetPlugins()->GetLArTransformationPlugin()->YZtoU(voxelPos.GetY(), voxelPos.GetZ()));
-            voxelProjectionsU.emplace_back(
-                LArVoxelProjection(voxel.m_energyInVoxel, uPos, voxelPos.GetX(), pandora::TPC_VIEW_U, voxel.m_voxelID, voxel.m_trackID, voxel.m_tpcID));
+            voxelProjectionsU.emplace_back(LArVoxelProjection(
+                voxel.m_energyInVoxel, uPos, voxelPos.GetX(), pandora::TPC_VIEW_U, voxel.m_voxelID, voxel.m_trackID, voxel.m_tpcID));
 
             const float vPos(pPrimaryPandora->GetPlugins()->GetLArTransformationPlugin()->YZtoV(voxelPos.GetY(), voxelPos.GetZ()));
-            voxelProjectionsV.emplace_back(
-                LArVoxelProjection(voxel.m_energyInVoxel, vPos, voxelPos.GetX(), pandora::TPC_VIEW_V, voxel.m_voxelID, voxel.m_trackID, voxel.m_tpcID));
+            voxelProjectionsV.emplace_back(LArVoxelProjection(
+                voxel.m_energyInVoxel, vPos, voxelPos.GetX(), pandora::TPC_VIEW_V, voxel.m_voxelID, voxel.m_trackID, voxel.m_tpcID));
 
             const float wPos(pPrimaryPandora->GetPlugins()->GetLArTransformationPlugin()->YZtoW(voxelPos.GetY(), voxelPos.GetZ()));
-            voxelProjectionsW.emplace_back(
-                LArVoxelProjection(voxel.m_energyInVoxel, wPos, voxelPos.GetX(), pandora::TPC_VIEW_W, voxel.m_voxelID, voxel.m_trackID, voxel.m_tpcID));
+            voxelProjectionsW.emplace_back(LArVoxelProjection(
+                voxel.m_energyInVoxel, wPos, voxelPos.GetX(), pandora::TPC_VIEW_W, voxel.m_voxelID, voxel.m_trackID, voxel.m_tpcID));
         }
 
         std::vector<LArVoxelProjectionList> viewProjections;
@@ -1982,11 +1983,11 @@ void ProcessFormatOption(const std::string &formatOption, const std::string &inp
         // Space point ROOT format
         parameters.m_dataFormat = Parameters::LArNDFormat::SP;
         if (chosenFormatOption == "spmc")
-             parameters.m_dataFormat = Parameters::LArNDFormat::SPMC;
+            parameters.m_dataFormat = Parameters::LArNDFormat::SPMC;
         // Set the geometry file name
         parameters.m_geomFileName = geomFileName;
         // All lengths are already in cm, so don't rescale
-//        parameters.m_lengthScale = 1.0f;
+        //        parameters.m_lengthScale = 1.0f;
         parameters.m_lengthScale = parameters.m_mm2cm;
         // All energies are already in GeV, so don't rescale
         parameters.m_energyScale = 1.0f;
@@ -2004,7 +2005,8 @@ void ProcessFormatOption(const std::string &formatOption, const std::string &inp
         // TGeoManager is stored in the input rooTracker file containing the hits
         parameters.m_geomFileName = parameters.m_inputFileName;
         // All lengths are in mm, so we need to convert them to cm
-        parameters.m_lengthScale = parameters.m_mm2cm;;
+        parameters.m_lengthScale = parameters.m_mm2cm;
+        ;
         // All energies are in MeV, so we need to convert them to GeV
         parameters.m_energyScale = parameters.m_MeV2GeV;
         // Set expected input TTree name for space point data

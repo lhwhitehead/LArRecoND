@@ -86,9 +86,9 @@ bool CutClusterCharacterisationThreeDAlgorithm::IsClearTrack(const Cluster *cons
     const float deltaTFit2{rTMaxFit2 - rTMinFit2};
     const float deltaT{deltaTFit1 > deltaTFit2 ? deltaTFit1 : deltaTFit2};
 
-//    std::cout << pCluster << " " << pCluster->GetNCaloHits() << ": " << straightLineLength << " (" << m_maxShowerLengthCut << ") :: "
-//              << integratedPathLength / straightLineLength << " (" << m_pathLengthRatioCut << ") :: "
-//              << deltaT / straightLineLength << " (" << m_rTWidthRatioCut << ")" << std::endl;
+    //    std::cout << pCluster << " " << pCluster->GetNCaloHits() << ": " << straightLineLength << " (" << m_maxShowerLengthCut << ") :: "
+    //              << integratedPathLength / straightLineLength << " (" << m_pathLengthRatioCut << ") :: "
+    //              << deltaT / straightLineLength << " (" << m_rTWidthRatioCut << ")" << std::endl;
 
     if (straightLineLength < std::numeric_limits<float>::epsilon())
         return false;
