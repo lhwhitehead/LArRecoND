@@ -83,11 +83,11 @@
         <EnableCrossingCandidates>false</EnableCrossingCandidates>
         <ReducedCandidates>true</ReducedCandidates>
     </algorithm>
-    <algorithm type = "LArVisualMonitoring">
+<!--    <algorithm type = "LArVisualMonitoring">
         <VertexListNames>CandidateVertices3D</VertexListNames>
         <ClusterListNames>Clusters3D</ClusterListNames>
         <ShowDetector>true</ShowDetector>
-    </algorithm>
+    </algorithm> -->
     <!-- We have made the 2D clusters, so remove 3D for now to make hits available later -->
     <algorithm type = "LArListDeletion" description = "3DClusterDeletion">
         <ClusterListNames>Clusters3D</ClusterListNames>

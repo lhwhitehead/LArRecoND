@@ -48,7 +48,7 @@
         <MCParticleListName>Input</MCParticleListName>
         <MinHitsForDisplay>0</MinHitsForDisplay>
     </algorithm>
--->
+
     <algorithm type = "LArNeutrinoEventValidation">
         <CaloHitListName>CaloHitList2D</CaloHitListName>
         <MCParticleListName>Input</MCParticleListName>
@@ -60,8 +60,21 @@
         <OutputTree>Validation</OutputTree>
         <OutputFile>Validation.root</OutputFile>
     </algorithm>
+-->
+    <algorithm type = "LArNDValidation">
+        <WriteTree>true</WriteTree>
+        <ValidateEvent>false</ValidateEvent>
+        <ValidateMC>true</ValidateMC>
+        <CaloHitListName>CaloHitList2D</CaloHitListName>
+        <PfoListName>RecreatedPfos</PfoListName>
+        <FileName>eventValidation.root</FileName>
+        <TreeName>validation</TreeName>
+    </algorithm> 
+<!--
     <algorithm type = "LArVisualMonitoring">
         <ShowCurrentPfos>true</ShowCurrentPfos>
         <ShowDetector>true</ShowDetector>
     </algorithm>
+-->
 </pandora>
+
