@@ -47,6 +47,7 @@
 #include <random>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 using namespace pandora;
 using namespace lar_nd_reco;
@@ -271,7 +272,7 @@ void ProcessEvents(const Parameters &parameters, const Pandora *const pPrimaryPa
     {
         ProcessSEDEvents(parameters, pPrimaryPandora, geom);
     }
-    else if (parameters.m_dataFormat == Parameters::LArNDFormat::SP)
+    else if (parameters.m_dataFormat == Parameters::LArNDFormat::SP || parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
     {
         ProcessSPEvents(parameters, pPrimaryPandora, geom);
     }
@@ -518,23 +519,12 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
         return;
     }
 
-    // Declaration of leaf types
-    int run;
-    int subrun;
-    int event;
-    std::vector<float> *x = 0;
-    std::vector<float> *y = 0;
-    std::vector<float> *z = 0;
-    std::vector<float> *charge = 0;
-
-    ndsptree->SetBranchAddress("run", &run);
-    ndsptree->SetBranchAddress("subrun", &subrun);
-    ndsptree->SetBranchAddress("event", &event);
-    ndsptree->SetBranchAddress("x", &x);
-    ndsptree->SetBranchAddress("y", &y);
-    ndsptree->SetBranchAddress("z", &z);
-    ndsptree->SetBranchAddress("charge", &charge);
-
+    LArSP *larsp = nullptr;
+    if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
+        larsp = new LArSPMC(ndsptree);
+    else
+        larsp = new LArSP(ndsptree);
+    
     // Factory for creating LArCaloHits
     lar_content::LArCaloHitFactory m_larCaloHitFactory;
 
@@ -564,13 +554,27 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
 
         ndsptree->GetEntry(iEvt);
 
+        // Some truth information first?
+        MCParticleEnergyMap MCEnergyMap;
+        if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
+        {
+            LArSPMC *larspmc = dynamic_cast<LArSPMC*>(larsp);
+
+            // Create MCParticles from Geant4 trajectories
+            for (size_t imcp = 0; imcp < larspmc->mcp_id->size(); ++imcp)
+            {
+                MCEnergyMap[(*larspmc->mcp_id)[imcp]] = (*larspmc->mcp_energy)[imcp];
+            }
+            CreateSPMCParticles(*larspmc, pPrimaryPandora, parameters);
+        }
+
         int hitCounter(0);
 
         // Loop over the space points and make them into caloHits
-        for (size_t isp = 0; isp < x->size(); ++isp)
+        for (size_t isp = 0; isp < larsp->x->size(); ++isp)
         {
-            const pandora::CartesianVector voxelPos((*x)[isp], (*y)[isp] - y_offset, (*z)[isp]);
-            const float voxelE = (*charge)[isp];
+            const pandora::CartesianVector voxelPos((*larsp->x)[isp], (*larsp->y)[isp] - y_offset, (*larsp->z)[isp]);
+            const float voxelE = (*larsp->charge)[isp];
             const float MipE = 0.00075;
             const float voxelMipEquivalentE = voxelE / MipE;
             const int tpcID(geom.GetTPCNumber(voxelPos));
@@ -594,13 +598,45 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
             caloHitParameters.m_hitRegion = pandora::SINGLE_REGION;
             caloHitParameters.m_layer = 0;
             caloHitParameters.m_isInOuterSamplingLayer = false;
-            caloHitParameters.m_pParentAddress = (void *)(static_cast<uintptr_t>(++hitCounter));
+            caloHitParameters.m_pParentAddress = (void *)(intptr_t(++hitCounter));
             caloHitParameters.m_larTPCVolumeId = tpcID < 0 ? 0 : tpcID;
             caloHitParameters.m_daughterVolumeId = 0;
 
+            // Only used for truth
+            int trackID{0};
+            float energyFrac{0.f};
+            // Set calo hit to MCParticle relation using trackID
+            if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
+            {
+                LArSPMC *larspmc = dynamic_cast<LArSPMC*>(larsp);
+                const std::vector<float> mcContribs = (*larspmc->hit_packetFrac)[isp];
+                const int biggestContribIndex = std::distance(mcContribs.begin(),std::max_element(mcContribs.begin(),mcContribs.end()));
+                trackID = (*larspmc->hit_particleID)[isp][biggestContribIndex];
+                // Due to the merging of hits, the contributions can sometimes add up to more than one. Normalise first.
+                const float sum = std::accumulate(mcContribs.begin(),mcContribs.end(),0.f);
+                energyFrac = mcContribs[biggestContribIndex] / sum;
+                // Since there are some negative contributions, energyFrac can still be > 0 here.
+                if (energyFrac >= 1.f + std::numeric_limits<float>::epsilon())
+                    energyFrac = 1.f;
+                
+                // Find the mc particle corresponding to this
+//                if (std::find(larspmc->mcp_id->begin(),larspmc->mcp_id->end(),trackID) != larspmc->mcp_id->end())
+//                {
+//                    const int mcIndex = std::distance(larspmc->mcp_id->begin(),std::find(larspmc->mcp_id->begin(),larspmc->mcp_id->end(),trackID));
+//                    std::cout << voxelPos.GetX() << " " << voxelPos.GetY() << " " << voxelPos.GetZ() << " " << energyFrac << " " << trackID << " " << (*larspmc->mcp_pdg)[mcIndex] << std::endl;
+//                }
+                if (std::find(larspmc->mcp_id->begin(),larspmc->mcp_id->end(),trackID) == larspmc->mcp_id->end())
+                    std::cout << "Problem? Could not find MC particle with ID " << trackID << std::endl;
+            }
+
             if (parameters.m_use3D)
+            {
                 PANDORA_THROW_RESULT_IF(
                     pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitParameters, m_larCaloHitFactory));
+
+                if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
+                    PandoraApi::SetCaloHitToMCParticleRelationship(*pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
+            }
 
             if (parameters.m_useLArTPC)
             {
@@ -611,26 +647,35 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
 
                 lar_content::LArCaloHitParameters caloHitPars_UView(caloHitParameters);
                 caloHitPars_UView.m_hitType = pandora::TPC_VIEW_U;
+                caloHitPars_UView.m_pParentAddress = (void *)(intptr_t(++hitCounter));
                 const float upos_cm(pPrimaryPandora->GetPlugins()->GetLArTransformationPlugin()->YZtoU(y0_cm, z0_cm));
                 caloHitPars_UView.m_positionVector = pandora::CartesianVector(x0_cm, 0.f, upos_cm);
 
+                PANDORA_THROW_RESULT_IF(
+                    pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitPars_UView, m_larCaloHitFactory));
+                if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
+                    PandoraApi::SetCaloHitToMCParticleRelationship(*pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
+
                 lar_content::LArCaloHitParameters caloHitPars_VView(caloHitParameters);
                 caloHitPars_VView.m_hitType = pandora::TPC_VIEW_V;
+                caloHitPars_VView.m_pParentAddress = (void *)(intptr_t(++hitCounter));
                 const float vpos_cm(pPrimaryPandora->GetPlugins()->GetLArTransformationPlugin()->YZtoV(y0_cm, z0_cm));
                 caloHitPars_VView.m_positionVector = pandora::CartesianVector(x0_cm, 0.f, vpos_cm);
+                PANDORA_THROW_RESULT_IF(
+                    pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitPars_VView, m_larCaloHitFactory));
+                if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
+                    PandoraApi::SetCaloHitToMCParticleRelationship(*pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
 
                 lar_content::LArCaloHitParameters caloHitPars_WView(caloHitParameters);
                 caloHitPars_WView.m_hitType = pandora::TPC_VIEW_W;
+                caloHitPars_WView.m_pParentAddress = (void *)(intptr_t(++hitCounter));
                 const float wpos_cm(pPrimaryPandora->GetPlugins()->GetLArTransformationPlugin()->YZtoW(y0_cm, z0_cm));
                 caloHitPars_WView.m_positionVector = pandora::CartesianVector(x0_cm, 0.f, wpos_cm);
 
-                // Create LArCaloHits for U, V and W views
-                PANDORA_THROW_RESULT_IF(
-                    pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitPars_UView, m_larCaloHitFactory));
-                PANDORA_THROW_RESULT_IF(
-                    pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitPars_VView, m_larCaloHitFactory));
                 PANDORA_THROW_RESULT_IF(
                     pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPrimaryPandora, caloHitPars_WView, m_larCaloHitFactory));
+                if (parameters.m_dataFormat == Parameters::LArNDFormat::SPMC)
+                    PandoraApi::SetCaloHitToMCParticleRelationship(*pPrimaryPandora, (void *)((intptr_t)hitCounter), (void *)((intptr_t)trackID), energyFrac);
             }
 
         } // end space point loop
@@ -640,6 +685,9 @@ void ProcessSPEvents(const Parameters &parameters, const Pandora *const pPrimary
     } // end event loop
 
     fileSource->Close();
+
+    delete larsp;
+    larsp = nullptr;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -923,6 +971,120 @@ void CreateSEDMCParticles(const LArSED &larsed, const pandora::Pandora *const pP
                 PandoraApi::SetMCParentDaughterRelationship(*pPrimaryPandora, (void *)((intptr_t)parentID), (void *)((intptr_t)trackID)));
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CreateSPMCParticles(const LArSPMC &larspmc, const pandora::Pandora *const pPrimaryPandora, const Parameters &parameters)
+{
+    lar_content::LArMCParticleFactory mcParticleFactory;
+
+    const int nuidoffset(100000000);
+
+    std::cout << "Read in " << larspmc.nuPDG->size() << " true neutrinos" << std::endl;
+
+    // Create MC neutrinos
+    for (size_t i = 0; i < larspmc.nuPDG->size(); ++i)
+    {
+        const int neutrinoID = nuidoffset + (*larspmc.nuID)[i];
+        const int neutrinoPDG = (*larspmc.nuPDG)[i];
+//        const std::string reaction = GetNuanceReaction((*larsed.ccnc)[i], (*larsed.mode)[i]);
+//        const int nuanceCode = GetNuanceCode(reaction);
+        const int nuanceCode = 1001; // We don't have this information available yet. Assume CCQE?
+
+        const float nuVtxX = (*larspmc.nuvtxx)[i] * parameters.m_lengthScale;
+        const float nuVtxY = (*larspmc.nuvtxy)[i] * parameters.m_lengthScale;
+        const float nuVtxZ = (*larspmc.nuvtxz)[i] * parameters.m_lengthScale;
+
+        const float nuE = (*larspmc.nue)[i] * parameters.m_energyScale;
+        const float nuPx = (*larspmc.nupx)[i];
+        const float nuPy = (*larspmc.nupy)[i];
+        const float nuPz = (*larspmc.nupz)[i];
+
+        lar_content::LArMCParticleParameters mcNeutrinoParameters;
+        mcNeutrinoParameters.m_nuanceCode = nuanceCode;
+        mcNeutrinoParameters.m_process = lar_content::MC_PROC_INCIDENT_NU;
+
+        mcNeutrinoParameters.m_energy = nuE;
+        mcNeutrinoParameters.m_momentum = pandora::CartesianVector(nuPx, nuPy, nuPz);
+        mcNeutrinoParameters.m_vertex = pandora::CartesianVector(nuVtxX, nuVtxY, nuVtxZ);
+        mcNeutrinoParameters.m_endpoint = pandora::CartesianVector(nuVtxX, nuVtxY, nuVtxZ);
+
+        mcNeutrinoParameters.m_particleId = neutrinoPDG;
+        mcNeutrinoParameters.m_mcParticleType = pandora::MC_3D;
+        mcNeutrinoParameters.m_pParentAddress = (void *)((intptr_t)neutrinoID);
+
+        PANDORA_THROW_RESULT_IF(
+            pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*pPrimaryPandora, mcNeutrinoParameters, mcParticleFactory));
+
+        std::cout << "Made neutrino with id " << neutrinoID << std::endl;
+    }
+    std::cout << "Made " << larspmc.nuPDG->size() << " neutrino particles" << std::endl;
+
+    // Create MC particles
+    for (size_t i = 0; i < larspmc.mcp_id->size(); ++i)
+    {
+        // LArMCParticle parameters
+        lar_content::LArMCParticleParameters mcParticleParameters;
+
+        // Initial momentum and energy in GeV
+        const float px = (*larspmc.mcp_px)[i] * parameters.m_energyScale;
+        const float py = (*larspmc.mcp_py)[i] * parameters.m_energyScale;
+        const float pz = (*larspmc.mcp_pz)[i] * parameters.m_energyScale;
+        const float energy = (*larspmc.mcp_energy)[i] * parameters.m_energyScale;
+        mcParticleParameters.m_energy = energy;
+        mcParticleParameters.m_momentum = pandora::CartesianVector(px, py, pz);
+
+        // Particle codes
+        mcParticleParameters.m_particleId = (*larspmc.mcp_pdg)[i];
+        mcParticleParameters.m_mcParticleType = pandora::MC_3D;
+
+        // Neutrino info
+        const int nuid = (*larspmc.mcp_nuid)[i];
+        const int neutrinoID = nuid + nuidoffset;
+//        const std::string reaction = GetNuanceReaction((*larspmc.ccnc)[nuid], (*larspmc.mode)[nuid]);
+//        mcParticleParameters.m_nuanceCode = GetNuanceCode(reaction);
+        mcParticleParameters.m_nuanceCode = 1001; // Dummy value again set to CCQE
+
+        // Set unique parent integer address using trackID
+        const int trackID = (*larspmc.mcp_id)[i];
+        mcParticleParameters.m_pParentAddress = (void *)((intptr_t)trackID);
+
+//        std::cout << "MCParticle " << trackID << " linked to neutrino " << neutrinoID << std::endl;
+        // Start and end points in cm
+        const float startx = (*larspmc.mcp_startx)[i] * parameters.m_lengthScale;
+        const float starty = (*larspmc.mcp_starty)[i] * parameters.m_lengthScale;
+        const float startz = (*larspmc.mcp_startz)[i] * parameters.m_lengthScale;
+        mcParticleParameters.m_vertex = pandora::CartesianVector(startx, starty, startz);
+
+        const float endx = (*larspmc.mcp_endx)[i] * parameters.m_lengthScale;
+        const float endy = (*larspmc.mcp_endy)[i] * parameters.m_lengthScale;
+        const float endz = (*larspmc.mcp_endz)[i] * parameters.m_lengthScale;
+        mcParticleParameters.m_endpoint = pandora::CartesianVector(endx, endy, endz);
+
+        // Process ID
+        mcParticleParameters.m_process = lar_content::MC_PROC_UNKNOWN;
+
+        // Create MCParticle
+        PANDORA_THROW_RESULT_IF(
+            pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*pPrimaryPandora, mcParticleParameters, mcParticleFactory));
+
+        // Set parent relationships
+        const int parentID = (*larspmc.mcp_mother)[i];
+
+        if (parentID == -1) // link to mc neutrino
+        {
+            PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=,
+                PandoraApi::SetMCParentDaughterRelationship(*pPrimaryPandora, (void *)((intptr_t)neutrinoID), (void *)((intptr_t)trackID)));
+        }
+        else
+        {
+            PANDORA_THROW_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=,
+                PandoraApi::SetMCParentDaughterRelationship(*pPrimaryPandora, (void *)((intptr_t)parentID), (void *)((intptr_t)trackID)));
+        }
+    }
+    std::cout << "Made " << larspmc.mcp_id->size() << " MC particles" << std::endl;
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1815,10 +1977,12 @@ void ProcessFormatOption(const std::string &formatOption, const std::string &inp
         // Set the sensitive detector name if not set
         parameters.m_sensitiveDetName = sensDetName.empty() ? "volTPCActive" : sensDetName;
     }
-    else if (chosenFormatOption == "sp")
+    else if (chosenFormatOption == "sp" || chosenFormatOption == "spmc")
     {
         // Space point ROOT format
         parameters.m_dataFormat = Parameters::LArNDFormat::SP;
+        if (chosenFormatOption == "spmc")
+             parameters.m_dataFormat = Parameters::LArNDFormat::SPMC;
         // Set the geometry file name
         parameters.m_geomFileName = geomFileName;
         // All lengths are already in cm, so don't rescale

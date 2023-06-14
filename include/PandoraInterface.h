@@ -17,6 +17,8 @@
 #include "LArHitInfo.h"
 #include "LArNDGeomSimple.h"
 #include "LArSED.h"
+#include "LArSP.h"
+#include "LArSPMC.h"
 #include "LArVoxel.h"
 
 namespace pandora
@@ -47,7 +49,8 @@ public:
     {
         EDepSim = 0,
         SED = 1,
-        SP = 2
+        SP = 2,
+        SPMC = 3
     };
 
     LArNDFormat m_dataFormat; ///< The expected input data format (EDepSim rooTracker or SED ROOT)
@@ -234,6 +237,17 @@ MCParticleEnergyMap CreateEDepSimMCParticles(const TG4Event &event, const pandor
  *  @param  parameters The application parameters
  */
 void CreateSEDMCParticles(const LArSED &larsed, const pandora::Pandora *const pPrimaryPandora, const Parameters &parameters);
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  Create MC particles from the Geant4 trajectories, assuming SED format
+ *
+ *  @param  larsp The LArSP data object
+ *  @param  pPrimaryPandora The address of the primary pandora instance
+ *  @param  parameters The application parameters
+ */
+void CreateSPMCParticles(const LArSPMC &larspmc, const pandora::Pandora *const pPrimaryPandora, const Parameters &parameters);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
