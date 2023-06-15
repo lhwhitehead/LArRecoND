@@ -239,7 +239,7 @@ void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, c
     const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
     const int isCosmicRay{!isTestBeam && pMCNode->IsCosmicRay() ? 1 : 0};
     const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
-    const int mcId{pMCNode->GetId()};
+    const int mcId{static_cast<int>(reinterpret_cast<std::intptr_t>(pMCNode->GetLeadingMCParticle()->GetUid()))};
     const int pdg{pMCNode->GetParticleId()};
     const int tier{pMCNode->GetHierarchyTier()};
     const int mcHits{static_cast<int>(pMCNode->GetCaloHits().size())};
