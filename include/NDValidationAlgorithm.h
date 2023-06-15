@@ -30,6 +30,24 @@ public:
     virtual ~NDValidationAlgorithm();
 
 private:
+
+    class MatchInfo
+    {
+    public:
+        MatchInfo(const int pdg, const int nHits, const int nSharedHits, const float completeness, const float purity);
+
+        void Print() const;
+
+        int m_pdg;
+        int m_nHits;
+        int m_nSharedHits;
+        float m_completeness;
+        float m_purity;
+    };
+    typedef std::vector<MatchInfo> MatchInfoVector;
+    typedef std::map<const pandora::MCParticle *, MatchInfoVector> MatchInfoMap;
+    typedef std::map<const pandora::MCParticle *, int> MCHitsMap;
+
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -45,7 +63,7 @@ private:
      *
      *  @param  matchInfo The match info object to use for validation
      */
-    void MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const;
+    void MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo);
 
     /**
      *  @brief  Collates variables and fills ROOT tree for MC particles with matches
@@ -53,7 +71,7 @@ private:
      *  @param  matches The MCMatches object containing the matches
      *  @param  matchInfo The MatchInfo object with the full event context
      */
-    void Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo) const;
+    void Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo);
 
     int m_event;                   ///< The current event
     std::string m_caloHitListName; ///< Name of input calo hit list
@@ -66,6 +84,9 @@ private:
     bool m_foldToLeadingShowers;   ///< Whether or not to fold the hierarchy back to leading shower particles
     bool m_validateEvent;          ///< Whether to validate at the level of an event
     bool m_validateMC;             ///< Whether to validate at the level of MC nodes
+    bool m_printToScreen;          ///< Whether to print information to the terminal
+    MatchInfoMap m_matchMap;       ///< Map to consolidate match information across slices
+    MCHitsMap m_mcHitsMap;         ///< Map of the number of hits for a given MCParticle
 };
 
 } // namespace lar_content

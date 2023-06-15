@@ -19,6 +19,24 @@ using namespace pandora;
 namespace lar_content
 {
 
+NDValidationAlgorithm::MatchInfo::MatchInfo(const int pdg, const int nHits, const int nSharedHits, const float completeness, const float purity):
+    m_pdg{pdg},
+    m_nHits{nHits},
+    m_nSharedHits{nSharedHits},
+    m_completeness{completeness},
+    m_purity{purity}
+{}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NDValidationAlgorithm::MatchInfo::Print() const
+{
+    std::cout << "  - Pfo: pdg = " << m_pdg << ", hits = " << m_nHits << ", shared hits = " << m_nSharedHits << ", completeness = " << m_completeness << ", purity = " << m_purity << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 NDValidationAlgorithm::NDValidationAlgorithm() :
     m_event{-1},
     m_writeTree{false},
@@ -26,7 +44,8 @@ NDValidationAlgorithm::NDValidationAlgorithm() :
     m_foldDynamic{false},
     m_foldToLeadingShowers{false},
     m_validateEvent{false},
-    m_validateMC{false}
+    m_validateMC{false},
+    m_printToScreen{false}
 {
 }
 
@@ -52,6 +71,8 @@ StatusCode NDValidationAlgorithm::Run()
     const PfoList *pPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
 
+    m_matchMap.clear();
+    m_mcHitsMap.clear();
     std::map<const MCParticle *, MCParticleList> trueNeutrinoMap;
 
     for (const MCParticle *pMCParticle : *pMCParticleList)
@@ -61,7 +82,9 @@ StatusCode NDValidationAlgorithm::Run()
             MCParticleList descendentsList;
             LArMCParticleHelper::GetAllDescendentMCParticles(pMCParticle, descendentsList);
             trueNeutrinoMap[pMCParticle] = descendentsList;
-            std::cout << "Found true neutrino " << pMCParticle << " with " << trueNeutrinoMap[pMCParticle].size() << " primaries" << std::endl;
+
+            if(m_printToScreen)
+                std::cout << "Found true neutrino " << pMCParticle << " with " << trueNeutrinoMap[pMCParticle].size() << " primaries" << std::endl;
         }
     }
 
@@ -102,6 +125,23 @@ StatusCode NDValidationAlgorithm::Run()
                 this->MCValidation(matchInfo);
         }
     }
+
+
+    if (m_validateMC && m_printToScreen)
+    {
+        for (auto const &mcMatchPair : m_matchMap)
+        { 
+            const MCParticle *pMC{mcMatchPair.first};
+            const int mcId{static_cast<int>(reinterpret_cast<std::intptr_t>(pMC->GetUid()))};
+            const int pdg{pMC->GetParticleId()};
+            const int mcHits{m_mcHitsMap.at(pMC)};
+            std::cout << std::endl;
+            std::cout << "- MC Particle: id = " << mcId << ", pdg = " << pdg << ", nhits = " << mcHits << ", matches " << mcMatchPair.second.size() << ":" << std::endl;
+            for (const MatchInfo &match : mcMatchPair.second)
+                match.Print();
+        }
+    }
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -222,7 +262,7 @@ void NDValidationAlgorithm::EventValidation(const LArHierarchyHelper::MatchInfo 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NDValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const
+void NDValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo)
 {
     if (m_writeTree)
     {
@@ -233,22 +273,23 @@ void NDValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchInfo &ma
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo) const
+void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo)
 {
     const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
+    const MCParticle *pMCParticle{pMCNode->GetLeadingMCParticle()};
     const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
     const int isCosmicRay{!isTestBeam && pMCNode->IsCosmicRay() ? 1 : 0};
     const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
-    const int mcId{static_cast<int>(reinterpret_cast<std::intptr_t>(pMCNode->GetLeadingMCParticle()->GetUid()))};
+    const int mcId{static_cast<int>(reinterpret_cast<std::intptr_t>(pMCParticle->GetUid()))};
     const int pdg{pMCNode->GetParticleId()};
     const int tier{pMCNode->GetHierarchyTier()};
     const int mcHits{static_cast<int>(pMCNode->GetCaloHits().size())};
     const int isLeadingLepton{pMCNode->IsLeadingLepton() ? 1 : 0};
 
-    const MCParticleList &parentList{pMCNode->GetLeadingMCParticle()->GetParentList()};
-    const int isElectron{std::abs(pMCNode->GetLeadingMCParticle()->GetParticleId()) == E_MINUS ? 1 : 0};
+    const MCParticleList &parentList{pMCParticle->GetParentList()};
+    const int isElectron{std::abs(pMCParticle->GetParticleId()) == E_MINUS ? 1 : 0};
     const int hasMuonParent{parentList.size() == 1 && std::abs(parentList.front()->GetParticleId()) == MU_MINUS ? 1 : 0};
-    const int isMichel{isElectron && hasMuonParent && LArMCParticleHelper::IsDecay(pMCNode->GetLeadingMCParticle()) ? 1 : 0};
+    const int isMichel{isElectron && hasMuonParent && LArMCParticleHelper::IsDecay(pMCParticle) ? 1 : 0};
 
     const LArHierarchyHelper::RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
     const int nMatches{static_cast<int>(nodeVector.size())};
@@ -259,13 +300,23 @@ void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, c
     FloatVector purityAdcVectorU, purityAdcVectorV, purityAdcVectorW, completenessAdcVectorU, completenessAdcVectorV, completenessAdcVectorW;
     const CartesianVector &trueVertex{pMCNode->GetLeadingMCParticle()->GetVertex()};
     float vtxDx{0.f}, vtxDy{0.f}, vtxDz{0.f}, vtxDr{0.f};
+
+    m_mcHitsMap[pMCParticle] = mcHits;
+
     for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : nodeVector)
     {
-        recoIdVector.emplace_back(pRecoNode->GetParticleId());
-        nRecoHitsVector.emplace_back(static_cast<int>(pRecoNode->GetCaloHits().size()));
-        nSharedHitsVector.emplace_back(static_cast<int>(matches.GetSharedHits(pRecoNode)));
-        purityVector.emplace_back(matches.GetPurity(pRecoNode));
-        completenessVector.emplace_back(matches.GetCompleteness(pRecoNode));
+        const int recoId{pRecoNode->GetParticleId()};
+        const int nRecoHits{static_cast<int>(pRecoNode->GetCaloHits().size())};
+        const int nSharedHits{static_cast<int>(matches.GetSharedHits(pRecoNode))};
+        const float completeness{matches.GetCompleteness(pRecoNode)};
+        const float purity{matches.GetPurity(pRecoNode)};
+        m_matchMap[pMCParticle].emplace_back(MatchInfo(recoId, nRecoHits, nSharedHits, completeness, purity));
+
+        recoIdVector.emplace_back(recoId);
+        nRecoHitsVector.emplace_back(nRecoHits);
+        nSharedHitsVector.emplace_back(nSharedHits);
+        purityVector.emplace_back(completeness);
+        completenessVector.emplace_back(purity);
         purityAdcVector.emplace_back(matches.GetPurity(pRecoNode, true));
         completenessAdcVector.emplace_back(matches.GetCompleteness(pRecoNode, true));
         purityVectorU.emplace_back(matches.GetPurity(pRecoNode, TPC_VIEW_U));
@@ -289,6 +340,7 @@ void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, c
             vtxDz = recoVertex.GetZ() - trueVertex.GetZ();
             vtxDr = std::sqrt(vtxDx * vtxDx + vtxDy * vtxDy + vtxDz * vtxDz);
         }
+
     }
 
     // Would like to add information on hierarchy matching. Needs some thought, it's extremely complicated
@@ -298,7 +350,7 @@ void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, c
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcPDG", pdg));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTier", tier));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcNHits", mcHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuInteration", isNeutrinoInt));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuInteraction", isNeutrinoInt));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCosmicRay", isCosmicRay));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isTestBeam", isTestBeam));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isLeadingLepton", isLeadingLepton));
@@ -328,6 +380,7 @@ void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, c
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -365,6 +418,8 @@ StatusCode NDValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldDynamic", m_foldDynamic));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldToLeadingShowers", m_foldToLeadingShowers));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PrintToScreen", m_printToScreen));
 
     return STATUS_CODE_SUCCESS;
 }

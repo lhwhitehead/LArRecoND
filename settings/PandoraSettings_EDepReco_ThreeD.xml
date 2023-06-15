@@ -69,6 +69,7 @@
         <PfoListName>RecreatedPfos</PfoListName>
         <FileName>eventValidation.root</FileName>
         <TreeName>validation</TreeName>
+        <PrintToScreen>true</PrintToScreen>
     </algorithm> 
 <!--
     <algorithm type = "LArVisualMonitoring">
