@@ -43,8 +43,6 @@ NDValidationAlgorithm::NDValidationAlgorithm() :
     m_foldToPrimaries{false},
     m_foldDynamic{false},
     m_foldToLeadingShowers{false},
-    m_validateEvent{false},
-    m_validateMC{false},
     m_printToScreen{false}
 {
 }
@@ -119,15 +117,12 @@ StatusCode NDValidationAlgorithm::Run()
             LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
             //matchInfo.Print(mcHierarchy);
 
-            if (m_validateEvent)
-                this->EventValidation(matchInfo);
-            else if (m_validateMC)
-                this->MCValidation(matchInfo);
+            this->MCValidation(matchInfo);
         }
     }
 
 
-    if (m_validateMC && m_printToScreen)
+    if (m_printToScreen)
     {
         for (auto const &mcNeutrinoList : trueNeutrinoMap)
         {
@@ -155,121 +150,6 @@ StatusCode NDValidationAlgorithm::Run()
     }
 
     return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void NDValidationAlgorithm::EventValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const
-{
-    if (m_writeTree)
-    {
-        const LArHierarchyHelper::MCMatchesVector &matches{matchInfo.GetMatches()};
-        MCParticleSet primaryMCSet;
-        std::set<const LArHierarchyHelper::MCHierarchy::Node *> trackNodeSet, showerNodeSet;
-        int nGoodTrackMatches{0}, nGoodShowerMatches{0};
-        int nGoodMatches{0}, nPoorMatches{0}, nUnmatched{0};
-        int nGoodTier1Matches{0}, nTier1Nodes{0};
-        int nGoodTier1TrackMatches{0}, nTier1TrackNodes{0};
-        int nGoodTier1ShowerMatches{0}, nTier1ShowerNodes{0};
-        int hasLeadingMuon{0}, hasLeadingElectron{0}, isLeadingLeptonCorrect{0};
-        // ATTN: Probably want quality cuts here for "good match" definition
-        for (const LArHierarchyHelper::MCMatches &mcMatch : matches)
-        {
-            const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
-            const MCParticle *const pMC{pNode->GetLeadingMCParticle()};
-            primaryMCSet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMC));
-            const int nReco{static_cast<int>(mcMatch.GetRecoMatches().size())};
-            const bool isQuality{mcMatch.IsQuality(matchInfo.GetQualityCuts())};
-            if (nReco == 1 && isQuality)
-                ++nGoodMatches;
-            else if (nReco == 1)
-                ++nPoorMatches;
-            else if (nReco > 1)
-                ++nPoorMatches;
-            else
-                ++nUnmatched;
-            if (pNode->GetHierarchyTier() == 1)
-            {
-                ++nTier1Nodes;
-                if (nReco == 1 && isQuality)
-                    ++nGoodTier1Matches;
-            }
-
-            const int pdg{std::abs(pNode->GetParticleId())};
-            if (pNode->IsLeadingLepton())
-            {
-                if (pdg == MU_MINUS)
-                    hasLeadingMuon = 1;
-                else if (pdg == E_MINUS)
-                    hasLeadingElectron = 1;
-                isLeadingLeptonCorrect = nReco == 1 ? 1 : 0;
-            }
-
-            if (pdg == PHOTON || pdg == E_MINUS)
-            {
-                showerNodeSet.insert(pNode);
-                if (nReco == 1 && isQuality)
-                {
-                    ++nGoodShowerMatches;
-                    if (pNode->GetHierarchyTier() == 1)
-                        ++nGoodTier1ShowerMatches;
-                }
-                if (pNode->GetHierarchyTier() == 1)
-                    ++nTier1ShowerNodes;
-            }
-            else
-            {
-                trackNodeSet.insert(pNode);
-                if (nReco == 1 && isQuality)
-                {
-                    ++nGoodTrackMatches;
-                    if (pNode->GetHierarchyTier() == 1)
-                        ++nGoodTier1TrackMatches;
-                }
-                if (pNode->GetHierarchyTier() == 1)
-                    ++nTier1TrackNodes;
-            }
-        }
-
-        MCParticleList primaryMCList;
-        for (const MCParticle *const pMC : primaryMCSet)
-            primaryMCList.emplace_back(pMC);
-        const int interactionType{static_cast<int>(LArInteractionTypeHelper::GetInteractionType(primaryMCList))};
-        const int nNodes{static_cast<int>(matchInfo.GetNMCNodes())};
-
-        const int nTrackNodes{static_cast<int>(trackNodeSet.size())}, nShowerNodes{static_cast<int>(showerNodeSet.size())};
-        const CartesianVector &trueVertex{matchInfo.GetMCNeutrino()->GetVertex()};
-        const CartesianVector &recoVertex{LArPfoHelper::GetVertex(matchInfo.GetRecoNeutrino())->GetPosition()};
-        const float vtxDx{recoVertex.GetX() - trueVertex.GetX()};
-        const float vtxDy{recoVertex.GetY() - trueVertex.GetY()};
-        const float vtxDz{recoVertex.GetZ() - trueVertex.GetZ()};
-        const float vtxDr{std::sqrt(vtxDx * vtxDx + vtxDy * vtxDy + vtxDz * vtxDz)};
-
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interactionType", interactionType));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodMatches", nGoodMatches));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nPoorMatches", nPoorMatches));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nUnmatched", nUnmatched));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nNodes", nNodes));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodTier1Matches", nGoodTier1Matches));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nTier1Nodes", nTier1Nodes));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodTrackMatches", nGoodTrackMatches));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodShowerMatches", nGoodShowerMatches));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nTrackNodes", nTrackNodes));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nShowerNodes", nShowerNodes));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodTier1TrackMatches", nGoodTier1TrackMatches));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nTier1TrackNodes", nTier1TrackNodes));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodTier1ShowerMatches", nGoodTier1ShowerMatches));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nTier1ShowerNodes", nTier1ShowerNodes));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "hasLeadingMuon", hasLeadingMuon));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "hasLeadingElectron", hasLeadingElectron));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isLeadingLeptonCorrect", isLeadingLeptonCorrect));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
-        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -406,24 +286,11 @@ StatusCode NDValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     if (m_pfoListName.empty())
         m_pfoListName = "RecreatedPfos";
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ValidateEvent", m_validateEvent));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ValidateMC", m_validateMC));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteTree", m_writeTree));
     if (m_writeTree)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FileName", m_filename));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treename));
-        if (!(m_validateEvent || m_validateMC))
-        {
-            std::cout << "Error: WriteTree requested but no tree names found" << std::endl;
-            return STATUS_CODE_NOT_FOUND;
-        }
-        else if (m_validateEvent && m_validateMC)
-        {
-            std::cout << "Error: Both event-level and MC-level validation requested simulataneously" << std::endl;
-            return STATUS_CODE_INVALID_PARAMETER;
-        }
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldToPrimaries", m_foldToPrimaries));

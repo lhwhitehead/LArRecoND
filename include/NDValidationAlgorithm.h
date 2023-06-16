@@ -56,13 +56,6 @@ private:
      *
      *  @param  matchInfo The match info object to use for validation
      */
-    void EventValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const;
-
-    /**
-     *  @brief  Validate information at the level of MC nodes
-     *
-     *  @param  matchInfo The match info object to use for validation
-     */
     void MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo);
 
     /**
@@ -82,8 +75,6 @@ private:
     bool m_foldToPrimaries;        ///< Whether or not to fold the hierarchy back to primary particles
     bool m_foldDynamic;            ///< Whether or not to fold the hierarchy dynamically
     bool m_foldToLeadingShowers;   ///< Whether or not to fold the hierarchy back to leading shower particles
-    bool m_validateEvent;          ///< Whether to validate at the level of an event
-    bool m_validateMC;             ///< Whether to validate at the level of MC nodes
     bool m_printToScreen;          ///< Whether to print information to the terminal
     MatchInfoMap m_matchMap;       ///< Map to consolidate match information across slices
     MCHitsMap m_mcHitsMap;         ///< Map of the number of hits for a given MCParticle

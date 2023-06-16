@@ -63,8 +63,6 @@
 -->
     <algorithm type = "LArNDValidation">
         <WriteTree>true</WriteTree>
-        <ValidateEvent>false</ValidateEvent>
-        <ValidateMC>true</ValidateMC>
         <CaloHitListName>CaloHitList2D</CaloHitListName>
         <PfoListName>RecreatedPfos</PfoListName>
         <FileName>eventValidation.root</FileName>
