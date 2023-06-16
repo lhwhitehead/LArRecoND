@@ -196,6 +196,8 @@ void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, c
     float vtxDx{0.f}, vtxDy{0.f}, vtxDz{0.f}, vtxDr{0.f};
 
     m_mcHitsMap[pMCParticle] = mcHits;
+    if (!m_matchMap.count(pMCParticle))
+        m_matchMap[pMCParticle] = MatchInfoVector();
 
     for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : nodeVector)
     {
