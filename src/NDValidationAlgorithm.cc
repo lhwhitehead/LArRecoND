@@ -31,7 +31,7 @@ NDValidationAlgorithm::MatchInfo::MatchInfo(const int pdg, const int nHits, cons
 
 void NDValidationAlgorithm::MatchInfo::Print() const
 {
-    std::cout << "  - Pfo: pdg = " << m_pdg << ", hits = " << m_nHits << ", shared hits = " << m_nSharedHits << ", completeness = " << m_completeness << ", purity = " << m_purity << std::endl;
+    std::cout << "    - Pfo: pdg = " << m_pdg << ", hits = " << m_nHits << ", shared hits = " << m_nSharedHits << ", completeness = " << m_completeness << ", purity = " << m_purity << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -129,16 +129,28 @@ StatusCode NDValidationAlgorithm::Run()
 
     if (m_validateMC && m_printToScreen)
     {
-        for (auto const &mcMatchPair : m_matchMap)
-        { 
-            const MCParticle *pMC{mcMatchPair.first};
-            const int mcId{static_cast<int>(reinterpret_cast<std::intptr_t>(pMC->GetUid()))};
-            const int pdg{pMC->GetParticleId()};
-            const int mcHits{m_mcHitsMap.at(pMC)};
+        for (auto const &mcNeutrinoList : trueNeutrinoMap)
+        {
             std::cout << std::endl;
-            std::cout << "- MC Particle: id = " << mcId << ", pdg = " << pdg << ", nhits = " << mcHits << ", matches " << mcMatchPair.second.size() << ":" << std::endl;
-            for (const MatchInfo &match : mcMatchPair.second)
-                match.Print();
+            std::cout << "===== Matching Information for Neutrino " << static_cast<int>(reinterpret_cast<std::intptr_t>(mcNeutrinoList.first->GetUid())) << " =====" << std::endl;
+            const MCParticleList &nuDescendents = mcNeutrinoList.second;
+            unsigned int nReconstructableChildren{0};
+            for (auto const &mcMatchPair : m_matchMap)
+            { 
+                const MCParticle *pMC{mcMatchPair.first};
+                if (std::find(nuDescendents.begin(),nuDescendents.end(),pMC) == nuDescendents.end())
+                    continue;
+
+                ++nReconstructableChildren;
+                const int mcId{static_cast<int>(reinterpret_cast<std::intptr_t>(pMC->GetUid()))};
+                const int pdg{pMC->GetParticleId()};
+                const int mcHits{m_mcHitsMap.at(pMC)};
+                std::cout << "  - MC Particle: id = " << mcId << ", pdg = " << pdg << ", nhits = " << mcHits << ", matches " << mcMatchPair.second.size() << ":" << std::endl;
+                for (const MatchInfo &match : mcMatchPair.second)
+                    match.Print();
+            }
+            if (!nReconstructableChildren)
+                std::cout << "- No true particles to reconstruct in the detector volume" << std::endl;
         }
     }
 
