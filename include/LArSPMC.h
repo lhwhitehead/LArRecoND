@@ -79,6 +79,8 @@ public:
     std::vector<float> *nuvtxx;
     std::vector<float> *nuvtxy;
     std::vector<float> *nuvtxz;
+    std::vector<int> *mode;
+    std::vector<int> *ccnc;
     TBranch *b_nuID;
     TBranch *b_nue;
     TBranch *b_nuPDG;
@@ -88,6 +90,8 @@ public:
     TBranch *b_nuvtxx;
     TBranch *b_nuvtxy;
     TBranch *b_nuvtxz;
+    TBranch *b_mode;
+    TBranch *b_ccnc;
 
     LArSPMC(TTree *tree = 0);
     virtual ~LArSPMC();
@@ -150,6 +154,8 @@ void LArSPMC::InitMC(TTree *tree)
     nuvtxx = nullptr;
     nuvtxy = nullptr;
     nuvtxz = nullptr;
+    mode = nullptr;
+    ccnc = nullptr;
 
     // Set branch addresses and branch pointers
     if (!tree)
@@ -188,6 +194,8 @@ void LArSPMC::InitMC(TTree *tree)
     fChain->SetBranchAddress("nuvtxx", &nuvtxx, &b_nuvtxx);
     fChain->SetBranchAddress("nuvtxy", &nuvtxy, &b_nuvtxy);
     fChain->SetBranchAddress("nuvtxz", &nuvtxz, &b_nuvtxz);
+    fChain->SetBranchAddress("mode", &mode, &b_mode);
+    fChain->SetBranchAddress("ccnc", &ccnc, &b_ccnc);
 }
 
 } // namespace lar_nd_reco

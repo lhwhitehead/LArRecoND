@@ -66,6 +66,24 @@ private:
      */
     void Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo);
 
+    /**
+     *  @brief  Check if the interaction is CC or NC
+     *
+     *  @param  pNeutrino the MC neutrino particle
+     *
+     *  @return true for cc, false for nc
+     */
+    bool IsCC(const pandora::MCParticle *pNeutrino) const;
+
+    /**
+     *  @brief  Get a simple interaction type string from the nuance code
+     *
+     *  @param  code the nuance code for the interaction
+     *
+     *  @return either "QE", "MEC", "RES", "DIS", "COH", "NEE", "IMD" or "OTHER"
+     */
+    std::string ConvertNuanceCodeToString(int code) const;
+
     int m_event;                   ///< The current event
     std::string m_caloHitListName; ///< Name of input calo hit list
     std::string m_pfoListName;     ///< Name of input PFO list

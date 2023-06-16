@@ -80,11 +80,10 @@ StatusCode NDValidationAlgorithm::Run()
             MCParticleList descendentsList;
             LArMCParticleHelper::GetAllDescendentMCParticles(pMCParticle, descendentsList);
             trueNeutrinoMap[pMCParticle] = descendentsList;
-
-            if(m_printToScreen)
-                std::cout << "Found true neutrino " << pMCParticle << " with " << trueNeutrinoMap[pMCParticle].size() << " primaries" << std::endl;
         }
     }
+    if(m_printToScreen)
+        std::cout << "Found " << trueNeutrinoMap.size() << " true neutrinos" << std::endl;
 
     std::map<const ParticleFlowObject *, PfoList> recoNeutrinoMap;
     for (const ParticleFlowObject *pPfo : *pPfoList)
@@ -96,6 +95,8 @@ StatusCode NDValidationAlgorithm::Run()
             recoNeutrinoMap[pPfo] = descendentsList;
         }
     }
+    if(m_printToScreen)
+        std::cout << "Found " << recoNeutrinoMap.size() << " reconstructed neutrinos" << std::endl;
 
     LArHierarchyHelper::FoldingParameters foldParameters;
     if (m_foldToPrimaries)
@@ -128,8 +129,10 @@ StatusCode NDValidationAlgorithm::Run()
         {
             const MCParticle *pNu = mcNeutrinoList.first;
             const int nuId = static_cast<int>(reinterpret_cast<std::intptr_t>(pNu->GetUid()));
+            const bool isCC = this->IsCC(pNu);
+            const int nuanceCode{(dynamic_cast<const LArMCParticle *>(pNu))->GetNuanceCode()};
             std::cout << std::endl;
-            std::cout << "===== Matching Information for Neutrino: id = " << nuId << ", pdg = " << pNu->GetParticleId() << " =====" << std::endl;
+            std::cout << "===== Matching Information for Neutrino: id = " << nuId << ", pdg = " << pNu->GetParticleId() << ", interaction = " << (isCC ? "CC " : "NC ") << this->ConvertNuanceCodeToString(nuanceCode) << " =====" << std::endl;
             const MCParticleList &nuDescendents = mcNeutrinoList.second;
             unsigned int nReconstructableChildren{0};
             for (auto const &mcMatchPair : m_matchMap)
@@ -158,11 +161,8 @@ StatusCode NDValidationAlgorithm::Run()
 
 void NDValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo)
 {
-    if (m_writeTree)
-    {
-        for (const LArHierarchyHelper::MCMatches &match : matchInfo.GetMatches())
-            this->Fill(match, matchInfo);
-    }
+    for (const LArHierarchyHelper::MCMatches &match : matchInfo.GetMatches())
+        this->Fill(match, matchInfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -238,43 +238,82 @@ void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, c
     }
 
     // Would like to add information on hierarchy matching. Needs some thought, it's extremely complicated
+    if (m_writeTree)
+    {
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcId", mcId));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcPDG", pdg));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTier", tier));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcNHits", mcHits));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuInteraction", isNeutrinoInt));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCosmicRay", isCosmicRay));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isTestBeam", isTestBeam));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isLeadingLepton", isLeadingLepton));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isMichel", isMichel));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nMatches", nMatches));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoIdVector", &recoIdVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nRecoHitsVector", &nRecoHitsVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nSharedHitsVector", &nSharedHitsVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityVector", &purityVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessVector", &completenessVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityAdcVector", &purityAdcVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVector", &completenessAdcVector));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityVectorU", &purityVectorU));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityVectorV", &purityVectorV));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityVectorW", &purityVectorW));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessVectorU", &completenessVectorU));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessVectorV", &completenessVectorV));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessVectorW", &completenessVectorW));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityAdcVectorU", &purityAdcVectorU));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityAdcVectorV", &purityAdcVectorV));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityAdcVectorW", &purityAdcVectorW));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorU", &completenessAdcVectorU));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorV", &completenessAdcVectorV));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorW", &completenessAdcVectorW));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
+    }
+}
 
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcId", mcId));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcPDG", pdg));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTier", tier));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcNHits", mcHits));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuInteraction", isNeutrinoInt));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCosmicRay", isCosmicRay));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isTestBeam", isTestBeam));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isLeadingLepton", isLeadingLepton));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isMichel", isMichel));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nMatches", nMatches));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoIdVector", &recoIdVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nRecoHitsVector", &nRecoHitsVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nSharedHitsVector", &nSharedHitsVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityVector", &purityVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessVector", &completenessVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityAdcVector", &purityAdcVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVector", &completenessAdcVector));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityVectorU", &purityVectorU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityVectorV", &purityVectorV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityVectorW", &purityVectorW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessVectorU", &completenessVectorU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessVectorV", &completenessVectorV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessVectorW", &completenessVectorW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityAdcVectorU", &purityAdcVectorU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityAdcVectorV", &purityAdcVectorV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "purityAdcVectorW", &purityAdcVectorW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorU", &completenessAdcVectorU));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorV", &completenessAdcVectorV));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorW", &completenessAdcVectorW));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
+//------------------------------------------------------------------------------------------------------------------------------------------
 
+bool NDValidationAlgorithm::IsCC(const MCParticle *pNeutrino) const
+{
+    bool isCC{true};
+    for (auto const *child : pNeutrino->GetDaughterList())
+    {
+        if (child->GetParticleId() == pNeutrino->GetParticleId())
+        {
+            isCC = false;
+            break;
+        }
+    }
+    return isCC;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+std::string NDValidationAlgorithm::ConvertNuanceCodeToString(int code) const
+{
+    if (code == 1001 || code == 1002)
+        return "QEL";
+    else if (code == 10)
+        return "MEC";
+    else if (code == 1)
+        return "RES";
+    else if (code == 1091 || code == 1092)
+        return "DIS";
+    else if (code == 3 || code == 4)
+        return "COH";
+    else if (code == 1098)
+        return "NEE"; // Neutrino - electron elastic scattering
+    else if (code == 1099)
+        return "IMD";
+    else
+        return "OTHER";
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

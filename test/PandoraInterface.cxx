@@ -985,15 +985,17 @@ void CreateSPMCParticles(const LArSPMC &larspmc, const pandora::Pandora *const p
 
     std::cout << "Read in " << larspmc.nuPDG->size() << " true neutrinos" << std::endl;
 
+    std::map<int, int> neutrinoIdToIndex;
+
     // Create MC neutrinos
     for (size_t i = 0; i < larspmc.nuPDG->size(); ++i)
     {
         const int neutrinoID = nuidoffset + (*larspmc.nuID)[i];
-        const int neutrinoPDG = (*larspmc.nuPDG)[i];
-        //        const std::string reaction = GetNuanceReaction((*larsed.ccnc)[i], (*larsed.mode)[i]);
-        //        const int nuanceCode = GetNuanceCode(reaction);
-        const int nuanceCode = 1001; // We don't have this information available yet. Assume CCQE?
+        neutrinoIdToIndex[neutrinoID] = i;
 
+        const int neutrinoPDG = (*larspmc.nuPDG)[i];
+        const std::string reaction = GetNuanceReaction((*larspmc.ccnc)[i], (*larspmc.mode)[i]);
+        const int nuanceCode = GetNuanceCode(reaction);
         const float nuVtxX = (*larspmc.nuvtxx)[i] * parameters.m_lengthScale;
         const float nuVtxY = (*larspmc.nuvtxy)[i] * parameters.m_lengthScale;
         const float nuVtxZ = (*larspmc.nuvtxz)[i] * parameters.m_lengthScale;
@@ -1018,10 +1020,7 @@ void CreateSPMCParticles(const LArSPMC &larspmc, const pandora::Pandora *const p
 
         PANDORA_THROW_RESULT_IF(
             pandora::STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*pPrimaryPandora, mcNeutrinoParameters, mcParticleFactory));
-
-        std::cout << "Made neutrino with id " << neutrinoID << std::endl;
     }
-    std::cout << "Made " << larspmc.nuPDG->size() << " neutrino particles" << std::endl;
 
     // Create MC particles
     for (size_t i = 0; i < larspmc.mcp_id->size(); ++i)
@@ -1044,9 +1043,9 @@ void CreateSPMCParticles(const LArSPMC &larspmc, const pandora::Pandora *const p
         // Neutrino info
         const int nuid = (*larspmc.mcp_nuid)[i];
         const int neutrinoID = nuid + nuidoffset;
-        //        const std::string reaction = GetNuanceReaction((*larspmc.ccnc)[nuid], (*larspmc.mode)[nuid]);
-        //        mcParticleParameters.m_nuanceCode = GetNuanceCode(reaction);
-        mcParticleParameters.m_nuanceCode = 1001; // Dummy value again set to CCQE
+        const int nuIndex = neutrinoIdToIndex[neutrinoID];
+        const std::string reaction = GetNuanceReaction((*larspmc.ccnc)[nuIndex], (*larspmc.mode)[nuIndex]);
+        mcParticleParameters.m_nuanceCode = GetNuanceCode(reaction);
 
         // Set unique parent integer address using trackID
         const int trackID = (*larspmc.mcp_id)[i];
@@ -1085,7 +1084,6 @@ void CreateSPMCParticles(const LArSPMC &larspmc, const pandora::Pandora *const p
                 PandoraApi::SetMCParentDaughterRelationship(*pPrimaryPandora, (void *)((intptr_t)parentID), (void *)((intptr_t)trackID)));
         }
     }
-    std::cout << "Made " << larspmc.mcp_id->size() << " MC particles" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
