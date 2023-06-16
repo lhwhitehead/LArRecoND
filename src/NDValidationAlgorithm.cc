@@ -126,8 +126,10 @@ StatusCode NDValidationAlgorithm::Run()
     {
         for (auto const &mcNeutrinoList : trueNeutrinoMap)
         {
+            const MCParticle *pNu = mcNeutrinoList.first;
+            const int nuId = static_cast<int>(reinterpret_cast<std::intptr_t>(pNu->GetUid()));
             std::cout << std::endl;
-            std::cout << "===== Matching Information for Neutrino " << static_cast<int>(reinterpret_cast<std::intptr_t>(mcNeutrinoList.first->GetUid())) << " =====" << std::endl;
+            std::cout << "===== Matching Information for Neutrino: id = " << nuId << ", pdg = " << pNu->GetParticleId() << " =====" << std::endl;
             const MCParticleList &nuDescendents = mcNeutrinoList.second;
             unsigned int nReconstructableChildren{0};
             for (auto const &mcMatchPair : m_matchMap)
