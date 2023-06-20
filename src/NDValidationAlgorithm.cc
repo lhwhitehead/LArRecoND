@@ -19,19 +19,30 @@ using namespace pandora;
 namespace lar_content
 {
 
-NDValidationAlgorithm::MatchInfo::MatchInfo(const int pdg, const int nHits, const int nSharedHits, const float completeness, const float purity):
+NDValidationAlgorithm::RecoMatchInfo::RecoMatchInfo(const int pdg, const int nHits, const int nSharedHits, const float completeness, const float purity, const float completenessADC, const float purityADC):
     m_pdg{pdg},
     m_nHits{nHits},
     m_nSharedHits{nSharedHits},
-    m_completeness{completeness},
-    m_purity{purity}
+    m_completeness{completeness}, m_purity{purity}, m_completenessADC{completenessADC}, m_purityADC{purityADC},
+    m_completenessU{-1.f}, m_purityU{-1.f}, m_completenessADCU{-1.f}, m_purityADCU{-1.f},
+    m_completenessV{-1.f}, m_purityV{-1.f}, m_completenessADCV{-1.f}, m_purityADCV{-1.f},
+    m_completenessW{-1.f}, m_purityW{-1.f}, m_completenessADCW{-1.f}, m_purityADCW{-1.f}
 {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NDValidationAlgorithm::MatchInfo::Print() const
+void NDValidationAlgorithm::RecoMatchInfo::Print() const
 {
     std::cout << "    - Pfo: pdg = " << m_pdg << ", hits = " << m_nHits << ", shared hits = " << m_nSharedHits << ", completeness = " << m_completeness << ", purity = " << m_purity << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NDValidationAlgorithm::RecoMatchInfo::SetTwoDValues(const float compU, const float purityU, const float compV, const float purityV, const float compW, const float purityW, const float compADCU, const float purityADCU, const float compADCV, const float purityADCV, const float compADCW, const float purityADCW)
+{
+    m_completenessU = compU; m_purityU = purityU; m_completenessADCU = compADCU; m_purityADCU = purityADCU;
+    m_completenessV = compV; m_purityV = purityV; m_completenessADCV = compADCV; m_purityADCV = purityADCV;
+    m_completenessW = compW; m_purityW = purityW; m_completenessADCW = compADCW; m_purityADCW = purityADCW;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -106,28 +117,25 @@ StatusCode NDValidationAlgorithm::Run()
     else if (m_foldToLeadingShowers)
         foldParameters.m_foldToLeadingShowers = true;
 
-    for (auto const &rPair : recoNeutrinoMap)
+    for (auto const &truePair : trueNeutrinoMap)
     {
-        LArHierarchyHelper::RecoHierarchy recoHierarchy;
-        LArHierarchyHelper::FillRecoHierarchy(rPair.second, foldParameters, recoHierarchy);
-        for (auto const &pair : trueNeutrinoMap)
+        LArHierarchyHelper::MCHierarchy mcHierarchy;
+        LArHierarchyHelper::FillMCHierarchy(truePair.second, *pCaloHitList, foldParameters, mcHierarchy);
+        for (auto const &recoPair : recoNeutrinoMap)
         {
-            LArHierarchyHelper::MCHierarchy mcHierarchy;
-            LArHierarchyHelper::FillMCHierarchy(pair.second, *pCaloHitList, foldParameters, mcHierarchy);
+            LArHierarchyHelper::RecoHierarchy recoHierarchy;
+            LArHierarchyHelper::FillRecoHierarchy(recoPair.second, foldParameters, recoHierarchy);
             LArHierarchyHelper::MatchInfo matchInfo;
             LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
-            //matchInfo.Print(mcHierarchy);
-
-            this->MCValidation(matchInfo);
+            this->ExtractRecoMatches(matchInfo);
         }
     }
-
 
     if (m_printToScreen)
     {
         for (auto const &mcNeutrinoList : trueNeutrinoMap)
         {
-            const MCParticle *pNu = mcNeutrinoList.first;
+            const MCParticle *const pNu = mcNeutrinoList.first;
             const int nuId = static_cast<int>(reinterpret_cast<std::intptr_t>(pNu->GetUid()));
             const bool isCC = this->IsCC(pNu);
             const int nuanceCode{(dynamic_cast<const LArMCParticle *>(pNu))->GetNuanceCode()};
@@ -137,7 +145,7 @@ StatusCode NDValidationAlgorithm::Run()
             unsigned int nReconstructableChildren{0};
             for (auto const &mcMatchPair : m_matchMap)
             { 
-                const MCParticle *pMC{mcMatchPair.first};
+                const MCParticle *const pMC{mcMatchPair.first};
                 if (std::find(nuDescendents.begin(),nuDescendents.end(),pMC) == nuDescendents.end())
                     continue;
 
@@ -146,7 +154,7 @@ StatusCode NDValidationAlgorithm::Run()
                 const int pdg{pMC->GetParticleId()};
                 const int mcHits{m_mcHitsMap.at(pMC)};
                 std::cout << "  - MC Particle: id = " << mcId << ", pdg = " << pdg << ", nhits = " << mcHits << ", matches " << mcMatchPair.second.size() << ":" << std::endl;
-                for (const MatchInfo &match : mcMatchPair.second)
+                for (const RecoMatchInfo &match : mcMatchPair.second)
                     match.Print();
             }
             if (!nReconstructableChildren)
@@ -154,92 +162,140 @@ StatusCode NDValidationAlgorithm::Run()
         }
     }
 
+    if (m_writeTree)
+    {
+        for (auto const &match : m_matchMap)
+            this->Fill(match.first, match.second);
+    }
+
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NDValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo)
+void NDValidationAlgorithm::ExtractRecoMatches(const LArHierarchyHelper::MatchInfo &match)
 {
-    for (const LArHierarchyHelper::MCMatches &match : matchInfo.GetMatches())
-        this->Fill(match, matchInfo);
+    MCParticleToMCMatchesMap mcParticleMatches;
+
+    // Matches for different primary particles
+    for (const LArHierarchyHelper::MCMatches &mcMatches : match.GetMatches())
+    {
+        const LArHierarchyHelper::MCHierarchy::Node *pMCNode{mcMatches.GetMC()};
+        const MCParticle *pMCParticle{pMCNode->GetLeadingMCParticle()};
+
+        if (!mcParticleMatches.count(pMCParticle))
+            mcParticleMatches[pMCParticle] = MCMatchesVector();
+        mcParticleMatches[pMCParticle].emplace_back(mcMatches);
+
+        // Set the number of hits if we haven't before
+        if (!m_mcHitsMap.count(pMCParticle))
+            m_mcHitsMap[pMCParticle] = static_cast<int>(pMCNode->GetCaloHits().size());
+    }
+
+    for (auto const &pair : mcParticleMatches)
+    {
+        RecoMatchInfoVector newMatches = this->CreateMatchInfoObjects(pair.second);
+        m_matchMap[pair.first].insert(m_matchMap[pair.first].end(), newMatches.begin(), newMatches.end());
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo)
+NDValidationAlgorithm::RecoMatchInfoVector NDValidationAlgorithm::CreateMatchInfoObjects(const MCMatchesVector &mcMatches)
 {
-    const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
-    const MCParticle *pMCParticle{pMCNode->GetLeadingMCParticle()};
-    const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
-    const int isCosmicRay{!isTestBeam && pMCNode->IsCosmicRay() ? 1 : 0};
-    const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
+    RecoMatchInfoVector outputMatchVector;
+
+    for (const LArHierarchyHelper::MCMatches &match : mcMatches)
+    {
+        for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : match.GetRecoMatches())
+        {
+            const int recoId{pRecoNode->GetParticleId()};
+            const int nRecoHits{static_cast<int>(pRecoNode->GetCaloHits().size())};
+            const int nSharedHits{static_cast<int>(match.GetSharedHits(pRecoNode))};
+            const float completeness{match.GetCompleteness(pRecoNode)};
+            const float purity{match.GetPurity(pRecoNode)};
+            const float completenessADC{match.GetCompleteness(pRecoNode, true)};
+            const float purityADC{match.GetPurity(pRecoNode, true)};
+
+            RecoMatchInfo newRecoMatch(recoId, nRecoHits, nSharedHits, completeness, purity, completenessADC, purityADC);
+            
+            const float compU{match.GetCompleteness(pRecoNode, TPC_VIEW_U)};
+            const float purityU{match.GetPurity(pRecoNode, TPC_VIEW_U)};
+            const float compADCU{match.GetCompleteness(pRecoNode, TPC_VIEW_U, true)};
+            const float purityADCU{match.GetPurity(pRecoNode, TPC_VIEW_U, true)};
+
+            const float compV{match.GetCompleteness(pRecoNode, TPC_VIEW_V)};
+            const float purityV{match.GetPurity(pRecoNode, TPC_VIEW_V)};
+            const float compADCV{match.GetCompleteness(pRecoNode, TPC_VIEW_V, true)};
+            const float purityADCV{match.GetPurity(pRecoNode, TPC_VIEW_V, true)};
+
+            const float compW{match.GetCompleteness(pRecoNode, TPC_VIEW_W)};
+            const float purityW{match.GetPurity(pRecoNode, TPC_VIEW_W)};
+            const float compADCW{match.GetCompleteness(pRecoNode, TPC_VIEW_W, true)};
+            const float purityADCW{match.GetPurity(pRecoNode, TPC_VIEW_W, true)};
+
+            newRecoMatch.SetTwoDValues(compU, purityU, compV, purityV, compW, purityW, compADCU, purityADCU, compADCV, purityADCV, compADCW, purityADCW);
+  
+            outputMatchVector.emplace_back(newRecoMatch);
+        }
+    }
+
+    return outputMatchVector;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NDValidationAlgorithm::Fill(const MCParticle *pMCParticle, const RecoMatchInfoVector &matches)
+{
     const int mcId{static_cast<int>(reinterpret_cast<std::intptr_t>(pMCParticle->GetUid()))};
-    const int pdg{pMCNode->GetParticleId()};
-    const int tier{pMCNode->GetHierarchyTier()};
-    const int mcHits{static_cast<int>(pMCNode->GetCaloHits().size())};
-    const int isLeadingLepton{pMCNode->IsLeadingLepton() ? 1 : 0};
+
+    // All MC nodes contain the same true particle information, so we can just use the first one
+    const int isTestBeam{LArMCParticleHelper::IsBeamParticle(pMCParticle) ? 1 : 0};
+    const int isCosmicRay{!isTestBeam && LArMCParticleHelper::IsCosmicRay(pMCParticle) ? 1 : 0};
+    const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
+    const int pdg{pMCParticle->GetParticleId()};
+    const int tier{LArMCParticleHelper::GetHierarchyTier(pMCParticle)};
+    const int mcHits{m_mcHitsMap.at(pMCParticle)};
+    const int isLeadingLepton{LArMCParticleHelper::IsLeading(pMCParticle) ? 1 : 0};
 
     const MCParticleList &parentList{pMCParticle->GetParentList()};
     const int isElectron{std::abs(pMCParticle->GetParticleId()) == E_MINUS ? 1 : 0};
     const int hasMuonParent{parentList.size() == 1 && std::abs(parentList.front()->GetParticleId()) == MU_MINUS ? 1 : 0};
     const int isMichel{isElectron && hasMuonParent && LArMCParticleHelper::IsDecay(pMCParticle) ? 1 : 0};
 
-    const LArHierarchyHelper::RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
-    const int nMatches{static_cast<int>(nodeVector.size())};
     IntVector recoIdVector, nRecoHitsVector, nSharedHitsVector;
     FloatVector purityVector, completenessVector;
     FloatVector purityAdcVector, completenessAdcVector;
     FloatVector purityVectorU, purityVectorV, purityVectorW, completenessVectorU, completenessVectorV, completenessVectorW;
     FloatVector purityAdcVectorU, purityAdcVectorV, purityAdcVectorW, completenessAdcVectorU, completenessAdcVectorV, completenessAdcVectorW;
-    const CartesianVector &trueVertex{pMCNode->GetLeadingMCParticle()->GetVertex()};
-    float vtxDx{0.f}, vtxDy{0.f}, vtxDz{0.f}, vtxDr{0.f};
 
-    m_mcHitsMap[pMCParticle] = mcHits;
-    if (!m_matchMap.count(pMCParticle))
-        m_matchMap[pMCParticle] = MatchInfoVector();
-
-    for (const LArHierarchyHelper::RecoHierarchy::Node *pRecoNode : nodeVector)
+    for (const RecoMatchInfo &match : matches)
     {
-        const int recoId{pRecoNode->GetParticleId()};
-        const int nRecoHits{static_cast<int>(pRecoNode->GetCaloHits().size())};
-        const int nSharedHits{static_cast<int>(matches.GetSharedHits(pRecoNode))};
-        const float completeness{matches.GetCompleteness(pRecoNode)};
-        const float purity{matches.GetPurity(pRecoNode)};
-        m_matchMap[pMCParticle].emplace_back(MatchInfo(recoId, nRecoHits, nSharedHits, completeness, purity));
+        recoIdVector.emplace_back(match.m_pdg);
+        nRecoHitsVector.emplace_back(match.m_nHits);
+        nSharedHitsVector.emplace_back(match.m_nSharedHits);
+        purityVector.emplace_back(match.m_completeness);
+        completenessVector.emplace_back(match.m_purity);
+        purityAdcVector.emplace_back(match.m_completenessADC);
+        completenessAdcVector.emplace_back(match.m_purityADC);
 
-        recoIdVector.emplace_back(recoId);
-        nRecoHitsVector.emplace_back(nRecoHits);
-        nSharedHitsVector.emplace_back(nSharedHits);
-        purityVector.emplace_back(completeness);
-        completenessVector.emplace_back(purity);
-        purityAdcVector.emplace_back(matches.GetPurity(pRecoNode, true));
-        completenessAdcVector.emplace_back(matches.GetCompleteness(pRecoNode, true));
-        purityVectorU.emplace_back(matches.GetPurity(pRecoNode, TPC_VIEW_U));
-        purityVectorV.emplace_back(matches.GetPurity(pRecoNode, TPC_VIEW_V));
-        purityVectorW.emplace_back(matches.GetPurity(pRecoNode, TPC_VIEW_W));
-        completenessVectorU.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_U));
-        completenessVectorV.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_V));
-        completenessVectorW.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_W));
-        purityAdcVectorU.emplace_back(matches.GetPurity(pRecoNode, TPC_VIEW_U, true));
-        purityAdcVectorV.emplace_back(matches.GetPurity(pRecoNode, TPC_VIEW_V, true));
-        purityAdcVectorW.emplace_back(matches.GetPurity(pRecoNode, TPC_VIEW_W, true));
-        completenessAdcVectorU.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_U, true));
-        completenessAdcVectorV.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_V, true));
-        completenessAdcVectorW.emplace_back(matches.GetCompleteness(pRecoNode, TPC_VIEW_W, true));
-        if (nMatches == 1)
-        {
-            // Only makes sense to calculate vertex delta if we have a one-to-one match
-            const CartesianVector &recoVertex{LArPfoHelper::GetVertex(matchInfo.GetRecoNeutrino())->GetPosition()};
-            vtxDx = recoVertex.GetX() - trueVertex.GetX();
-            vtxDy = recoVertex.GetY() - trueVertex.GetY();
-            vtxDz = recoVertex.GetZ() - trueVertex.GetZ();
-            vtxDr = std::sqrt(vtxDx * vtxDx + vtxDy * vtxDy + vtxDz * vtxDz);
-        }
-
+        // Per view information
+        purityVectorU.emplace_back(match.m_purityU);
+        purityVectorV.emplace_back(match.m_purityV);
+        purityVectorW.emplace_back(match.m_purityW);
+        completenessVectorU.emplace_back(match.m_completenessU);
+        completenessVectorV.emplace_back(match.m_completenessV);
+        completenessVectorW.emplace_back(match.m_completenessW);
+        purityAdcVectorU.emplace_back(match.m_purityADCU);
+        purityAdcVectorV.emplace_back(match.m_purityADCV);
+        purityAdcVectorW.emplace_back(match.m_purityADCW);
+        completenessAdcVectorU.emplace_back(match.m_completenessADCU);
+        completenessAdcVectorV.emplace_back(match.m_completenessADCV);
+        completenessAdcVectorW.emplace_back(match.m_completenessADCW);
+    
     }
 
-    // Would like to add information on hierarchy matching. Needs some thought, it's extremely complicated
+    const int nMatches{static_cast<int>(recoIdVector.size())};
     if (m_writeTree)
     {
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
@@ -272,10 +328,6 @@ void NDValidationAlgorithm::Fill(const LArHierarchyHelper::MCMatches &matches, c
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorU", &completenessAdcVectorU));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorV", &completenessAdcVectorV));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorW", &completenessAdcVectorW));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
         PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
     }
 }

@@ -31,40 +31,69 @@ public:
 
 private:
 
-    class MatchInfo
+    class RecoMatchInfo
     {
     public:
-        MatchInfo(const int pdg, const int nHits, const int nSharedHits, const float completeness, const float purity);
+        RecoMatchInfo(const int pdg, const int nHits, const int nSharedHits, const float completeness, const float purity, const float completenessADC, const float purityADC);
 
         void Print() const;
+
+        void SetTwoDValues(const float compU, const float purityU, const float compV, const float purityV, const float compW, const float purityW, const float compADCU, const float purityADCU, const float compADCV, const float purityADCV, const float compADCW, const float purityADCW);
 
         int m_pdg;
         int m_nHits;
         int m_nSharedHits;
         float m_completeness;
         float m_purity;
+        float m_completenessADC;
+        float m_purityADC;
+
+        float m_completenessU;
+        float m_purityU;
+        float m_completenessADCU;
+        float m_purityADCU;
+        float m_completenessV;
+        float m_purityV;
+        float m_completenessADCV;
+        float m_purityADCV;
+        float m_completenessW;
+        float m_purityW;
+        float m_completenessADCW;
+        float m_purityADCW;
     };
-    typedef std::vector<MatchInfo> MatchInfoVector;
-    typedef std::map<const pandora::MCParticle *, MatchInfoVector> MatchInfoMap;
+    typedef std::vector<RecoMatchInfo> RecoMatchInfoVector;
+    typedef std::map<const pandora::MCParticle *, RecoMatchInfoVector> RecoMatchInfoMap;
     typedef std::map<const pandora::MCParticle *, int> MCHitsMap;
+
+    typedef std::vector<LArHierarchyHelper::MCMatches> MCMatchesVector;
+    typedef std::map<const pandora::MCParticle *, MCMatchesVector> MCParticleToMCMatchesMap;
 
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Validate information at the level of MC nodes
+     *  @brief  Extract the reconstructed matches from the MatchInfo object
      *
-     *  @param  matchInfo The match info object to use for validation
+     *  @param  matchInfo The match info object that stores the hierarchy matching results
      */
-    void MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo);
+    void ExtractRecoMatches(const LArHierarchyHelper::MatchInfo &matchInfo);
+
+    /**
+     *  @brief  Extract the reconstructed matches from the MatchInfo object
+     *
+     *  @param  matchInfo The match info object that stores the hierarchy matching results
+     *
+     *  @return vector of reco matches from a vector of LArHierarchyHelper::MCMatches objects
+     */
+    RecoMatchInfoVector CreateMatchInfoObjects(const MCMatchesVector &mcMatches);
 
     /**
      *  @brief  Collates variables and fills ROOT tree for MC particles with matches
      *
-     *  @param  matches The MCMatches object containing the matches
-     *  @param  matchInfo The MatchInfo object with the full event context
+     *  @param  pMCParticle pointer to the MCParticle with matches
+     *  @param  matches vector of summarised matched pfos to the MCParticle
      */
-    void Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo);
+    void Fill(const pandora::MCParticle *pMCParticle, const RecoMatchInfoVector &matches);
 
     /**
      *  @brief  Check if the interaction is CC or NC
@@ -94,7 +123,7 @@ private:
     bool m_foldDynamic;            ///< Whether or not to fold the hierarchy dynamically
     bool m_foldToLeadingShowers;   ///< Whether or not to fold the hierarchy back to leading shower particles
     bool m_printToScreen;          ///< Whether to print information to the terminal
-    MatchInfoMap m_matchMap;       ///< Map to consolidate match information across slices
+    RecoMatchInfoMap m_matchMap;   ///< Map to consolidate match information across slices
     MCHitsMap m_mcHitsMap;         ///< Map of the number of hits for a given MCParticle
 };
 
