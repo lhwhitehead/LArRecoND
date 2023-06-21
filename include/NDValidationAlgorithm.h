@@ -34,12 +34,13 @@ private:
     class RecoMatchInfo
     {
     public:
-        RecoMatchInfo(const int pdg, const int nHits, const int nSharedHits, const float completeness, const float purity, const float completenessADC, const float purityADC);
+        RecoMatchInfo(const pandora::ParticleFlowObject *const pPfo, const int pdg, const int nHits, const int nSharedHits, const float completeness, const float purity, const float completenessADC, const float purityADC);
 
         void Print() const;
 
         void SetTwoDValues(const float compU, const float purityU, const float compV, const float purityV, const float compW, const float purityW, const float compADCU, const float purityADCU, const float compADCV, const float purityADCV, const float compADCW, const float purityADCW);
 
+        const pandora::ParticleFlowObject *m_pPfo;
         int m_pdg;
         int m_nHits;
         int m_nSharedHits;
