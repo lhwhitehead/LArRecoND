@@ -251,6 +251,14 @@ void NDValidationAlgorithm::Fill(const MCParticle *pMCParticle, const RecoMatchI
 {
     const int mcId{static_cast<int>(reinterpret_cast<std::intptr_t>(pMCParticle->GetUid()))};
 
+    const MCParticle *const pMCParent = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
+    if (pMCParent == nullptr)
+    {
+        std::cout << "Warning: particle has no neutrino parent. Not filling the tree" << std::endl;
+        return;
+    }
+    const int nuId{static_cast<int>(reinterpret_cast<std::intptr_t>(pMCParent->GetUid()))};
+
     // All MC nodes contain the same true particle information, so we can just use the first one
     const int isTestBeam{LArMCParticleHelper::IsBeamParticle(pMCParticle) ? 1 : 0};
     const int isCosmicRay{!isTestBeam && LArMCParticleHelper::IsCosmicRay(pMCParticle) ? 1 : 0};
@@ -320,6 +328,7 @@ void NDValidationAlgorithm::Fill(const MCParticle *pMCParticle, const RecoMatchI
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", m_event));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcId", mcId));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nuId", nuId));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcPDG", pdg));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcTier", tier));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcNHits", mcHits));
