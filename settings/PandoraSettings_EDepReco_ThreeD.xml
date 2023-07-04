@@ -68,9 +68,9 @@
         <FileName>eventValidation.root</FileName>
         <TreeName>validation</TreeName>
         <PrintToScreen>true</PrintToScreen>
-        <FoldToPrimaries>false</FoldToPrimaries>
+        <FoldToPrimaries>true</FoldToPrimaries>
         <FoldDynamic>false</FoldDynamic>
-        <FoldToLeadingShowers>true</FoldToLeadingShowers>
+        <FoldToLeadingShowers>false</FoldToLeadingShowers>
     </algorithm> 
 <!--
     <algorithm type = "LArVisualMonitoring">
